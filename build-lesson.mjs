@@ -8,6 +8,7 @@ const font=fs.readFileSync(path.join(root,'assets/lounge.woff2')).toString('base
 const css=sourceCSS.replace('__FONT_DATA__',font)+'\n'+fs.readFileSync(path.join(root,'src/lesson.css'),'utf8');
 const assets={};for(const name of ['background.webp','bird-frame-1.webp','bird-frame-2.webp','bird-sprite.webp','bird-original.webp','coin.webp','coin-original.webp'])assets[name]='data:image/webp;base64,'+fs.readFileSync(path.join(root,'assets',name)).toString('base64');
 assets['game-classic.png']='data:image/png;base64,'+fs.readFileSync(path.join(root,'assets/game-owl.png')).toString('base64');
+assets['flappy-reference.png']='data:image/png;base64,'+fs.readFileSync(path.join(root,'assets/flappy-reference.png')).toString('base64');
 const gameDocument=fs.readFileSync(path.join(root,'assets/source-practice.html'),'utf8');
 const sourceGames={};for(const mode of ['classic','practice'])sourceGames[mode]=fs.readFileSync(path.join(root,'assets/source-'+mode+'.html'),'utf8');
 const data={sourceGames,coinQuestions,questions,promptHead,promptTail,id:'flappy-image-course-20261025-v1',slides,assets,gameDocument,basePrompt};

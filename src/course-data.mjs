@@ -116,12 +116,23 @@ export const slides = [
   {
     "id": "intro",
     "type": "intro",
-    "title": "원버튼 아케이드 게임",
-    "accent": "원버튼 아케이드",
-    "body": "부엉이를 날려 돌기둥 사이를 지나가는 게임입니다.",
+    "title": "플래피 버드 알아보기",
+    "accent": "플래피 버드",
+    "body": "2013년, 베트남 개발자 동 응우옌(Dong Nguyen)이 만든 모바일 게임입니다.",
+    "rules": [
+      "화면을 누르면 새가 올라가고,\n누르지 않으면 아래로 내려옵니다.",
+      "파이프 사이를 통과하면\n점수가 1점씩 오릅니다.",
+      "파이프나 바닥에 닿으면\n게임이 끝납니다."
+    ],
+    "bridge": "다음 장에서는 직접 만든 부엉이 게임 ‘별빛 비행’을 해봅니다.",
+    "referenceURL": "https://github.com/nebez/floppybird",
+    "sourceURL": "https://www.vam.ac.uk/blog/news/the-rise-and-fall-of-flappy-bird-and-the-collecting-of-the-vas-first-app",
     "pptBody": [
-      "스페이스바나 화면을 누르면 위로 날아오릅니다."
-    ]
+      "플래피 버드는 화면을 눌러 새를 날리고 파이프 사이를 통과하는 모바일 게임입니다.",
+      "조작은 간단하지만 누르는 타이밍이 중요합니다.",
+      "다음 장에서는 별도로 제작한 부엉이 게임으로 같은 조작 방식을 체험합니다."
+    ],
+    "notes": "원작 Flappy Bird의 제작자·2013년 출시와 탭 조작은 V&A 박물관 소개 자료를 참고했다. 참고 화면은 이전 수업에서 사용한 nebez/floppybird 웹 재현판의 정적 캡처이며 원작 앱의 실제 캡처나 공식 웹사이트로 표기하지 않는다. 이 장은 소개용이고, 다음 장에서 실행하는 별빛 비행은 별도로 제작한 수업용 게임이다."
   },
   {
     "id": "classic",

@@ -159,7 +159,13 @@ function buildSlide(slide){
  if(slide.mode==='practice'){const next=action('다음 단계',()=>go(pageOf('coin-observe')),true,true);next.style.marginLeft='auto';bar.append(next);}
  if(slide.mode==='final'){if(pendingImageStage()!==null)bar.append(action('새 이미지 적용하기',()=>go(pendingImageStage()),true,true));bar.append(action('내 게임 보기',myGame,false,true),action('수정하기',()=>go(pageOf('repair')),true,true));}root.append(bar);return root;}
 
- if(slide.type==='intro'){makeLead(root,slide.body);const p=image(embeddedURL('game-classic.png'),'별빛 비행의 부엉이 게임 화면','intro-shot');root.append(p,el('p','intro-control',slide.pptBody[0]));return root;}
+ if(slide.type==='intro'){
+  makeLead(root,slide.body);
+  const rules=el('ol','intro-rules');slide.rules.forEach(text=>rules.append(el('li','',text)));root.append(rules);
+  const figure=el('figure','intro-reference'),crop=el('div','intro-reference-crop');crop.append(image(embeddedURL('flappy-reference.png'),'Flappy Bird 웹 재현판의 참고 화면'));
+  const credit=el('a','','참고 화면: nebez 웹 재현판 ↗');credit.href=slide.referenceURL;credit.target='_blank';credit.rel='noopener noreferrer';figure.append(crop,el('figcaption'));figure.lastChild.append(credit);root.append(figure);
+  root.append(el('p','intro-bridge',slide.bridge));const source=el('a','intro-source','소개 자료: V&A 박물관 ↗');source.href=slide.sourceURL;source.target='_blank';source.rel='noopener noreferrer';root.append(source);return root;
+ }
  if(slide.body)makeLead(root,slide.body);const box=content(root);
  if(slide.type==='activity'){buildActivity(box,slide);return root;}
  if(slide.type==='errors'){buildErrors(box,slide);return root;}
