@@ -41,7 +41,7 @@ function promptDialog(title,text,run){
  d.append(area,status,bar);return d;
 }
 function gameDialog(html,title,mode,allowHistory=false){
- const d=dialog(title),viewport=el('div','game-viewport'),frame=el('iframe'),sourceGame=html.includes('#gamecontainer{width:320px;height:525px;');
+ const d=dialog(title),viewport=el('div','game-viewport'),frame=el('iframe'),sourceGame=html.includes('#gamecontainer{width:320px;height:525px;')||html.includes('data-flappy-source="owl-v2"');
  d.classList.add('game-dialog');frame.title=title;frame.setAttribute('sandbox','allow-scripts');
  frame.srcdoc=html.replace(/<\/body\s*>/i,"<script>addEventListener('load',function(){setTimeout(function(){dispatchEvent(new Event('resize'));},80);});<\/script></body>");
  viewport.append(frame);const bar=el('div','actions game-toolbar');
@@ -152,14 +152,14 @@ function buildSlide(slide){
  if(slide.type==='goals'){const list=el('div','goals-list');slide.goals.forEach((text,i)=>{const row=el('div','goal-row');row.append(el('div','goal-number',String(i+1).padStart(2,'0')),el('div','editable goal-text',text));list.append(row);});root.append(list);return root;}
  if(slide.type==='explanation'){root.append(el('div','editable explanation-body',slide.body));const flow=el('div','flow');slide.flow.forEach((word,i)=>{if(i)flow.append(el('div','flow-arrow','→'));flow.append(el('div','flow-word',word));});root.append(el('div','flow-line'),flow);return root;}
  if(slide.type==='play'){
- makeLead(root,slide.mode==='final'&&pendingImageStage()!==null?'현재 게임입니다. 원하면 새 이미지를 추가로 적용할 수 있어요.':slide.caption);const frame=el('iframe','play-frame');frame.title=slide.mode==='classic'?'GitHub 원본 소스 게임':slide.mode==='practice'?'코인 모으기 게임':'학생의 최신 게임';frame.setAttribute('sandbox','allow-scripts');
+ makeLead(root,slide.mode==='final'&&pendingImageStage()!==null?'현재 게임입니다. 원하면 새 이미지를 추가로 적용할 수 있어요.':slide.caption);const frame=el('iframe','play-frame');frame.title=slide.mode==='classic'?'별빛 비행 — 부엉이 게임':slide.mode==='practice'?'코인 모으기 게임':'학생의 최신 게임';frame.setAttribute('sandbox','allow-scripts');
  const doc=slide.mode==='final'?(state.gameHTML||'<!doctype html><html lang="ko"><body><p>먼저 게임을 만들거나 HTML을 불러와 주세요.</p></body></html>'):data.sourceGames[slide.mode];frame.srcdoc=doc;if(slide.mode!=='final')frame.classList.add('source-game-frame');currentFrame=frame;root.append(frame);
  const bar=el('div','play-buttons');if(slide.mode==='classic')registerRankFrame(frame);
  bar.append(action('크게 보기',()=>gameDialog(doc,frame.title,null,slide.mode==='final'),false,true));
  if(slide.mode==='practice'){const next=action('다음 단계',()=>go(pageOf('coin-observe')),true,true);next.style.marginLeft='auto';bar.append(next);}
  if(slide.mode==='final'){if(pendingImageStage()!==null)bar.append(action('새 이미지 적용하기',()=>go(pendingImageStage()),true,true));bar.append(action('내 게임 보기',myGame,false,true),action('수정하기',()=>go(pageOf('repair')),true,true));}root.append(bar);return root;}
 
- if(slide.type==='intro'){makeLead(root,slide.body);const p=image(embeddedURL('game-classic.png'),'플래피 버드 웹 재현판의 실제 게임 장면','intro-shot');root.append(p,el('p','intro-control',slide.pptBody[0]));return root;}
+ if(slide.type==='intro'){makeLead(root,slide.body);const p=image(embeddedURL('game-classic.png'),'별빛 비행의 부엉이 게임 화면','intro-shot');root.append(p,el('p','intro-control',slide.pptBody[0]));return root;}
  if(slide.body)makeLead(root,slide.body);const box=content(root);
  if(slide.type==='activity'){buildActivity(box,slide);return root;}
  if(slide.type==='errors'){buildErrors(box,slide);return root;}
