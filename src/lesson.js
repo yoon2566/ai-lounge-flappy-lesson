@@ -18,6 +18,20 @@ let animation=null,controller=null,currentFrame=null;
 function save(){try{localStorage.setItem(STORE,JSON.stringify(state));$('save-state').textContent='이 브라우저에 진행 상황을 저장했습니다.';}catch{$('save-state').textContent='완성한 파일은 내려받아 보관하세요.';}}
 function el(tag,cls,text){const x=document.createElement(tag);if(cls)x.className=cls;if(text!==undefined)x.textContent=text;return x;}
 function action(text,fn,primary=false,small=false){const b=el('button','action'+(primary?' primary':'')+(small?' small':''),text);b.type='button';b.onclick=fn;return b;}
+// Move the real step button, preserving its callback, validation and async state.
+function setSlidePrimary(root,button){
+ button.dataset.stepAction='true';root._slidePrimary=button;
+ if(root===$('slide-content').firstElementChild)mountSlidePrimary(root);
+ return button;
+}
+function mountSlidePrimary(root){
+ const slot=$('slide-action'),button=root._slidePrimary;
+ $('slide-wrap').classList.toggle('has-slide-next',Boolean(button));slot.hidden=!button;
+ if(!button){slot.replaceChildren();return;}
+ button.id='slide-next';button.classList.add('slide-next');button.classList.remove('small');
+ if(slot.firstElementChild!==button){const prior=slot.firstElementChild;if(prior){prior.removeAttribute('id');prior.classList.remove('slide-next');}slot.replaceChildren(button);}
+ requestAnimationFrame(fit);
+}
 function image(src,alt,cls=''){const x=el('img',cls);x.src=src;x.alt=alt;return x;}
 function demoURL(kind){return HOST+'/assets/'+DEMO[kind];}
 function embeddedURL(name){return data.assets[name]||HOST+'/assets/'+name;}
@@ -156,8 +170,8 @@ function buildSlide(slide){
  const doc=slide.mode==='final'?(state.gameHTML||'<!doctype html><html lang="ko"><body><p>먼저 게임을 만들거나 HTML을 불러와 주세요.</p></body></html>'):data.sourceGames[slide.mode];frame.srcdoc=doc;if(slide.mode!=='final')frame.classList.add('source-game-frame');currentFrame=frame;root.append(frame);
  const bar=el('div','play-buttons');if(slide.mode==='classic')registerRankFrame(frame);
  bar.append(action('크게 보기',()=>gameDialog(doc,frame.title,null,slide.mode==='final'),false,true));
- if(slide.mode==='practice'){const next=action('다음 단계',()=>go(pageOf('coin-observe')),true,true);next.style.marginLeft='auto';bar.append(next);}
- if(slide.mode==='final'){if(pendingImageStage()!==null)bar.append(action('새 이미지 적용하기',()=>go(pendingImageStage()),true,true));bar.append(action('내 게임 보기',myGame,false,true),action('수정하기',()=>go(pageOf('repair')),true,true));}root.append(bar);return root;}
+ if(slide.mode==='practice')bar.append(setSlidePrimary(root,action('다음 단계',()=>go(pageOf('coin-observe')),true)));
+ if(slide.mode==='final'){if(pendingImageStage()!==null)bar.append(action('새 이미지 적용하기',()=>go(pendingImageStage()),true,true));bar.append(action('내 게임 보기',myGame,false,true),setSlidePrimary(root,action('오류 확인하기 →',()=>go(pageOf('repair')),true)));}root.append(bar);return root;}
 
  if(slide.type==='intro'){
   makeLead(root,slide.body);
@@ -172,11 +186,17 @@ function buildSlide(slide){
 
  return root;
 }
-function fit(){const root=$('slide-content').firstElementChild;if(!root)return;const wrap=$('slide-wrap'),scale=wrap.clientWidth/1280,nav=$('slide-next');root.style.transform='scale('+scale+')';wrap.style.setProperty('--next-space-bottom',Math.max(112,Math.ceil((nav.offsetHeight+wrap.clientHeight*.044+8)/scale))+'px');wrap.style.setProperty('--next-space-right',Math.max(292,Math.ceil((nav.offsetWidth+wrap.clientWidth*.047+16)/scale))+'px');const title=root.querySelector('.title');let size=root.classList.contains('cover')?99:92;title.style.fontSize=size+'px';while((title.scrollWidth>title.clientWidth+1||title.scrollHeight>title.clientHeight+1)&&size>57)title.style.fontSize=(--size)+'px';root.querySelectorAll('.goal-text').forEach(x=>{let n=44;x.style.fontSize=n+'px';while(x.scrollHeight>x.clientHeight+1&&n>32)x.style.fontSize=(--n)+'px';});}
-function render(){if(animation){clearInterval(animation);animation=null;}currentFrame=null;const slide=data.slides[state.page];$('slide-content').replaceChildren(buildSlide(slide));$('page-number').value=state.page+1;$('page-total').textContent='/ '+data.slides.length;$('previous').disabled=state.page===0;$('next').disabled=state.page===data.slides.length-1;$('slide-next').disabled=$('next').disabled;$('slide-next').textContent=$('next').disabled?'마지막 장':'다음 →';$('slide-next').setAttribute('aria-label',$('next').disabled?'마지막 슬라이드입니다':'다음 슬라이드로 이동');document.title=slide.title.replace(/\n/g,' ')+' · AI 셰르파 2차';fit();requestAnimationFrame(fit);}
+function fit(){const root=$('slide-content').firstElementChild;if(!root)return;const wrap=$('slide-wrap'),scale=wrap.clientWidth/1280,nav=$('slide-next');root.style.transform='scale('+scale+')';wrap.style.setProperty('--next-space-bottom',Math.max(112,Math.ceil(((nav?.offsetHeight||0)+wrap.clientHeight*.044+8)/scale))+'px');wrap.style.setProperty('--next-space-right',Math.max(292,Math.ceil(((nav?.offsetWidth||0)+wrap.clientWidth*.047+16)/scale))+'px');const title=root.querySelector('.title');let size=root.classList.contains('cover')?99:92;title.style.fontSize=size+'px';while((title.scrollWidth>title.clientWidth+1||title.scrollHeight>title.clientHeight+1)&&size>57)title.style.fontSize=(--size)+'px';root.querySelectorAll('.goal-text').forEach(x=>{let n=44;x.style.fontSize=n+'px';while(x.scrollHeight>x.clientHeight+1&&n>32)x.style.fontSize=(--n)+'px';});}
+function render(){
+ if(animation){clearInterval(animation);animation=null;}currentFrame=null;
+ const slide=data.slides[state.page],root=buildSlide(slide);
+ if(['cover','goals','explanation','intro'].includes(slide.type)||(slide.type==='play'&&slide.mode==='classic'))setSlidePrimary(root,action('다음 →',()=>{go(state.page+1);$('lesson-stage').focus({preventScroll:true});},true));
+ $('slide-content').replaceChildren(root);mountSlidePrimary(root);
+ $('page-number').value=state.page+1;$('page-total').textContent='/ '+data.slides.length;$('previous').disabled=state.page===0;
+ document.title=slide.title.replace(/\n/g,' ')+' · AI 셰르파 2차';fit();requestAnimationFrame(fit);
+}
 function go(page){if(page<0||page>=data.slides.length)return;state.page=page;save();render();}
-$('previous').onclick=()=>go(state.page-1);$('next').onclick=()=>go(state.page+1);$('page-number').oninput=event=>{const n=Number(event.target.value);if(Number.isInteger(n)&&n>=1&&n<=data.slides.length)go(n-1);};$('page-number').onchange=()=>{$('page-number').value=state.page+1;};
-$('slide-next').onclick=()=>{go(state.page+1);$('lesson-stage').focus({preventScroll:true});};
+$('previous').onclick=()=>go(state.page-1);$('page-number').oninput=event=>{const n=Number(event.target.value);if(Number.isInteger(n)&&n>=1&&n<=data.slides.length)go(n-1);};$('page-number').onchange=()=>{$('page-number').value=state.page+1;};
 $('open-haiku').onclick=()=>window.open('https://haiku-effort-chat.yoon2566.workers.dev/','_blank','noopener');
 $('save-course').onclick=()=>{const clone=document.documentElement.cloneNode(true);clone.querySelectorAll('.lesson-dialog,.prompt-dialog').forEach(x=>x.remove());clone.querySelector('#slide-content').replaceChildren();let saved=clone.querySelector('#user-state');if(!saved){saved=document.createElement('script');saved.id='user-state';saved.type='application/json';clone.querySelector('body').insertBefore(saved,clone.querySelector('body > script:last-of-type'));}saved.textContent=JSON.stringify(state).replace(/</g,'\\u003c');download('AI이미지로_내게임만들기_수업'+data.slides.length+'장.html',new Blob(['<!doctype html>\n'+clone.outerHTML],{type:'text/html;charset=utf-8'}));};
 window.addEventListener('hashchange',()=>{const m=location.hash.match(/^#slide=(\d+)$/);if(m)go(Number(m[1])-1);});

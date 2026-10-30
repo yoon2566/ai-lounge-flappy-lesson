@@ -81,7 +81,11 @@
 .flow-content>.sprite-layout,.flow-content>.studio-layout,.flow-content>.apply-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);overflow-x:hidden}.flow-content>.sprite-layout>div,.frame-controls>div{min-width:0}.frame-controls input{min-width:0;box-sizing:border-box}
 .remove-actions{gap:7px;flex-wrap:wrap}.remove-actions .action{font-size:18px;padding:8px 12px}.remove-actions [hidden]{display:none!important}
 .speed-control{margin-top:12px}.speed-control span{font-weight:700}
-/* Match the dinosaur lesson's visible slide navigation without covering activity controls. */
+/* One actual step action in a shared position; no second page-skip button. */
+[data-step-action]:not(.slide-next){display:none!important}
+.slide-action{position:absolute;right:4.7%;bottom:4.4%;z-index:3;width:max-content;min-width:14%;max-width:70%}
+.slide-action[hidden]{display:none}
+.slide-action>.slide-next{position:static;width:100%;height:auto;min-height:32px;min-width:0;margin:0;padding:clamp(6px,1.1vw,15px) clamp(12px,1.8vw,24px);font:850 clamp(14px,2.3vw,30px)/1.2 Lounge,'Noto Sans KR',sans-serif;background:var(--accent);border-color:var(--accent);color:#fff;white-space:normal;overflow-wrap:anywhere}
 .slide-wrap.has-slide-next .slide>.content{bottom:var(--next-space-bottom,112px)}
 .slide-wrap.has-slide-next .goals-list{bottom:max(140px,var(--next-space-bottom,112px))}
 .slide-wrap.has-slide-next .cover-bird{height:min(310px,calc(420px - var(--next-space-bottom,112px)))}
@@ -90,5 +94,5 @@
 .slide-wrap.has-slide-next .play-frame:not(.source-game-frame){height:min(355px,calc(494px - var(--next-space-bottom,112px)))}
 .slide-wrap.has-slide-next .intro-reference-crop{--picture-height:min(334px,calc(436px - var(--next-space-bottom,112px)));width:calc(var(--picture-height) * .61078);height:var(--picture-height)}
 .slide-wrap.has-slide-next .intro-bridge{right:var(--next-space-right,292px);font-size:24px;line-height:1.4}
-.slide-next:disabled{background:#d8dcd7;border-color:#d8dcd7;color:#637065;opacity:1;cursor:default;box-shadow:none}
+.slide-action>.slide-next:disabled{background:#d8dcd7;border-color:#d8dcd7;color:#637065;opacity:1;cursor:default;box-shadow:none}
 .lesson-dialog.background-editor{width:min(900px,94vw);height:min(800px,90dvh);gap:8px}.background-editor .erase-wrap{flex:1;min-height:100px;display:flex;align-items:center;justify-content:center;overflow:hidden}.background-editor .erase-canvas{max-width:100%;max-height:100%;object-fit:contain;touch-action:none;cursor:crosshair}.background-editor .erase-size{display:flex;align-items:center;gap:6px;font-size:16px}.background-editor .erase-size input{width:100px}.background-editor .actions{gap:6px}.background-editor .actions button{font-size:16px;padding:8px 11px}
