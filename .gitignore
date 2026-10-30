@@ -1,0 +1,25 @@
+# Preserve current application source, assets and deployment output.
+/.wrangler/
+/31_2차_플래피버드수업/
+/output/
+# Existing nested upstream Git repository is preserved as an offline tar snapshot.
+/vendor/
+/evidence/*
+!/evidence/.gitkeep
+/.build/*
+!/.build/assets/
+/.build/assets/*
+!/.build/assets/game-classic.png
+**/node_modules/
+**/.env*
+**/.dev.vars*
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.sqlite*
+**/*.db
+**/*.log
+**/*.tmp
+**/.DS_Store
+**/Thumbs.db

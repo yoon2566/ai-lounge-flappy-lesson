@@ -1,0 +1,40 @@
+{
+  "name": "ai-lounge-flappy-lesson-20261025",
+  "account_id": "82356ad65ade9e0a481f823ca538d437",
+  "compatibility_date": "2026-10-25",
+  "main": "src/worker.mjs",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*",
+      "/images/*"
+    ]
+  },
+  "kv_namespaces": [
+    {
+      "binding": "LESSON_IMAGES",
+      "id": "b959a15338ab4862a6b528402550438d"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "FLAPPY_RANKINGS",
+      "database_name": "flappy-lesson-leaderboard-20261025",
+      "database_id": "6fe3ea1a-434e-4008-b4d6-1c0b66a32190",
+      "migrations_dir": "migrations"
+    },
+    {
+      "binding": "ARTWORK_DB",
+      "database_name": "flappy-artwork-board-20261026",
+      "database_id": "b4bd34ae-e2f1-4d92-ad14-a4e81f281c09"
+    }
+  ],
+  "workers_dev": true,
+  "r2_buckets": [
+    {
+      "binding": "LESSON_IMAGE_BUCKET",
+      "bucket_name": "ai-lounge-lesson-images"
+    }
+  ]
+}

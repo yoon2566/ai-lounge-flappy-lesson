@@ -1,0 +1,2 @@
+import fs from 'node:fs';import {slides,basePrompt} from './src/course-data.mjs';
+fs.writeFileSync(new URL('./output/강사용_진행안.txt',import.meta.url),'AI 이미지로 내 게임 만들기 — 25장\n온라인 수업에서 실습합니다. PPTX는 같은 쪽으로 연결하는 링크를 제공합니다.\n게임: Haiku 5.5 High / 추론 꺼짐. 이미지: Recraft V4.1 Flash.\n5장 원본 체험은 nebez/floppybird 기반 웹 재현판이며 공식 원작 소스가 아닙니다.\n완성 HTML은 외부 이미지 URL을 사용하므로 인터넷이 필요합니다.\n\n'+slides.map((s,i)=>(i+1)+'. '+s.title.replace(/\n/g,' ')+'\n'+(s.notes||s.pptBody?.join(' ')||'')+'\n').join('\n')+'\n코인 게임 규칙\n'+basePrompt);

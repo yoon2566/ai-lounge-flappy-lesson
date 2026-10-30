@@ -1,0 +1,527 @@
+{
+  "label": "10월29일 버전(플래피)",
+  "snapshotDateKST": "2026-10-31",
+  "note": "Current local state; label does not backdate the snapshot. Snapshot manifest excludes itself.",
+  "externalInput": {
+    "originalRelativePath": "../25_PPT제작/PPT양식/HTML_템플릿/template-shell.html",
+    "savedAs": "backup-inputs/template-shell.html",
+    "sha256": "25e31db5a632e7be488b0ac1d5de4109bf1a9f24d7aa984839d98ae571f10229"
+  },
+  "files": [
+    {
+      "path": ".build/assets/game-classic.png",
+      "bytes": 52938,
+      "sha256": "6174b0161367b7e4b496e51b1467abb18b395a5455eda05fc39d493324d82869"
+    },
+    {
+      "path": ".gitattributes",
+      "bytes": 81,
+      "sha256": "92451098b989c7ad540b0ad8de6362d9c0c75b1bdda56d9b485e4c8838d3ac04"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 464,
+      "sha256": "fdfa8aae3178c6a73b806cab621f6c098bc1449e7af7480abdaa22df28793629"
+    },
+    {
+      "path": "BACKUP.md",
+      "bytes": 2792,
+      "sha256": "8ed0d53fd62bb975e3ab183667d42567da63f9a18add19d0763b0bfd407e0daf"
+    },
+    {
+      "path": "assets/background.webp",
+      "bytes": 1512156,
+      "sha256": "c82e595c4efab4e9b2ab25b32ec2f28f7b34b425f60b10e8ec843f8510e957c5"
+    },
+    {
+      "path": "assets/bird-frame-1.webp",
+      "bytes": 24730,
+      "sha256": "1ef00c2d1610450402dda0404abafce3de72535000b67e90c6df44cb74f4a2f4"
+    },
+    {
+      "path": "assets/bird-frame-2.webp",
+      "bytes": 20218,
+      "sha256": "11f76ba4331d519afc2490ca4e2a6795a3b597aef24ecde3a98fa1b408990479"
+    },
+    {
+      "path": "assets/bird-original.webp",
+      "bytes": 896318,
+      "sha256": "413233b61b6664a77c71e8e1de252a0eafbe42b0724490d20a92d112dc498d9f"
+    },
+    {
+      "path": "assets/bird-sprite.webp",
+      "bytes": 44368,
+      "sha256": "02f7bc2bcdd0952e3067845c9c2234f47f36ec78f48fcbae4bf705a59d6d5446"
+    },
+    {
+      "path": "assets/coin-original.webp",
+      "bytes": 965956,
+      "sha256": "71e05afa28d125f3001d1e562c5aecf9a0ea0f7ff7ab61d6c71fdc61abb8994d"
+    },
+    {
+      "path": "assets/coin.webp",
+      "bytes": 39886,
+      "sha256": "fb39dc4f9e556838a93d6d7ad89039c9e2957c7ab2a6cadba73ad61cca7c76a2"
+    },
+    {
+      "path": "assets/lounge.woff2",
+      "bytes": 1189380,
+      "sha256": "a35628a028cf199ce7e2e3af02806d526eb2778e26b9f1b7c61ecd768284896a"
+    },
+    {
+      "path": "assets/original-source/LICENSE",
+      "bytes": 10347,
+      "sha256": "2514772e5475f208616174f81b67168179a7c51bdcb9570a96a9dc5962b83116"
+    },
+    {
+      "path": "assets/original-source/README.md",
+      "bytes": 3050,
+      "sha256": "3880da48991ba11622663f79225df3ac6abae5595130f7e8a118b25e9a722b9d"
+    },
+    {
+      "path": "assets/original-source/bird.webp",
+      "bytes": 232,
+      "sha256": "6b57721ba95d687b4aeddd0ddf836d91b03ed370457833e4ceaf6c9a7e1aa76c"
+    },
+    {
+      "path": "assets/original-source/ceiling.webp",
+      "bytes": 88,
+      "sha256": "f92e38ea2d40166711169a63e91c96c65438682b6725565bdf4611718b5cbf85"
+    },
+    {
+      "path": "assets/original-source/classic-engine.js",
+      "bytes": 134036,
+      "sha256": "8ebd33a640bffbaade920aee832f12a00b69d45e548330233205010d5b9be463"
+    },
+    {
+      "path": "assets/original-source/font_big_0.webp",
+      "bytes": 84,
+      "sha256": "67e0b6ec1638dbb9a4ac84a7a5c5cb079d36322272957e02acbd312ba60678c5"
+    },
+    {
+      "path": "assets/original-source/font_big_1.webp",
+      "bytes": 82,
+      "sha256": "d0fcf6eb7f84fc40dad77eb1bb2cd50444230541d563ec540f40cab6dd42a07e"
+    },
+    {
+      "path": "assets/original-source/font_big_2.webp",
+      "bytes": 90,
+      "sha256": "415f847992827b4fb1347785b2cffd056264f400938455f0cc60cd8f09b7c6e1"
+    },
+    {
+      "path": "assets/original-source/font_big_3.webp",
+      "bytes": 86,
+      "sha256": "10d8a5267583414337d32fc262fe50a8ad8f6a094d43366591328e0126628522"
+    },
+    {
+      "path": "assets/original-source/font_big_4.webp",
+      "bytes": 88,
+      "sha256": "ed62bf1424d6707ca7ace99fe783f237995bfbb1b11b2a09ce94d8b8da4a1e1d"
+    },
+    {
+      "path": "assets/original-source/font_big_5.webp",
+      "bytes": 90,
+      "sha256": "354b5dc207f8af346cd1b6af03ac6dc64607cd7b7e07f5077b579d5cf9cb7a08"
+    },
+    {
+      "path": "assets/original-source/font_big_6.webp",
+      "bytes": 90,
+      "sha256": "a5820a32be9ff8a5d3d57eef38852322d3625444fee64560fe46c5e21090f7c5"
+    },
+    {
+      "path": "assets/original-source/font_big_7.webp",
+      "bytes": 88,
+      "sha256": "65e8e40d6d896ad375f3660089c5d3925bed28c2151d739d032e3ee13b20e313"
+    },
+    {
+      "path": "assets/original-source/font_big_8.webp",
+      "bytes": 86,
+      "sha256": "c2086b35906efddbc518409831939dbbae6f91e24ee44d824064c98c1d9e1874"
+    },
+    {
+      "path": "assets/original-source/font_big_9.webp",
+      "bytes": 88,
+      "sha256": "203c5f14541eb2bf003aee1466028c4873534fd4008900fda5ef589d886d6905"
+    },
+    {
+      "path": "assets/original-source/font_small_0.webp",
+      "bytes": 54,
+      "sha256": "4cee84f72ccc855c49e938855d0b2d05250311eabddbe1511c27fa2c2c0de121"
+    },
+    {
+      "path": "assets/original-source/font_small_1.webp",
+      "bytes": 56,
+      "sha256": "3efa7e53eccc9d96ea7bc1f7066ce900bf01879f8f23c34b3355d12168cb7887"
+    },
+    {
+      "path": "assets/original-source/font_small_2.webp",
+      "bytes": 54,
+      "sha256": "7fd64455dc5c7b8b998258ce33ee637e2a384f332d65bbc1935d1c03e31d3efa"
+    },
+    {
+      "path": "assets/original-source/font_small_3.webp",
+      "bytes": 52,
+      "sha256": "e79d309310d12c8d94b6ce03e8ff0487dbfe5ef04b2c8e1cc78de13c3ac2c7f9"
+    },
+    {
+      "path": "assets/original-source/font_small_4.webp",
+      "bytes": 62,
+      "sha256": "9e6ba5dc4b8aae3fbc390084afd39b5314d5d07910311fa6b966fb844ff0104a"
+    },
+    {
+      "path": "assets/original-source/font_small_5.webp",
+      "bytes": 54,
+      "sha256": "1fc3ec240ca16ccea3744f86a35cea71b9ec79c51170cadd3a64bf386aa143af"
+    },
+    {
+      "path": "assets/original-source/font_small_6.webp",
+      "bytes": 54,
+      "sha256": "b64a5d75cef8eca8fb31bb7a86f7df0f5641e22fe0e1e114df950c11803aaa06"
+    },
+    {
+      "path": "assets/original-source/font_small_7.webp",
+      "bytes": 62,
+      "sha256": "9cbc1c6f775f145f0a755f39723e84bed297bf72da0cc153b6cbc974c11a4d33"
+    },
+    {
+      "path": "assets/original-source/font_small_8.webp",
+      "bytes": 54,
+      "sha256": "e42a85a79e0e113b434fe2ed8f0712389343657b080904207780f2cdcdf4063f"
+    },
+    {
+      "path": "assets/original-source/font_small_9.webp",
+      "bytes": 54,
+      "sha256": "daf9963dad2ca74dd7de05197a91983aca1677939a3b255c1c3731d7ed01cdeb"
+    },
+    {
+      "path": "assets/original-source/land.webp",
+      "bytes": 130,
+      "sha256": "e66bbd7a7226f6fc4e741a5e7b07ea02b0a5cb0268290d07dda0cf816836c6b5"
+    },
+    {
+      "path": "assets/original-source/medal_bronze.webp",
+      "bytes": 220,
+      "sha256": "83af1f3b32c0fe673d1f259e64764d0332698f93d341f5960d90cea5d1bd9755"
+    },
+    {
+      "path": "assets/original-source/medal_gold.webp",
+      "bytes": 216,
+      "sha256": "2f450d089a5827b240ce7132f8758f2d0a2af11277b26eb2347a2eb61c50d0cc"
+    },
+    {
+      "path": "assets/original-source/medal_platinum.webp",
+      "bytes": 220,
+      "sha256": "5a4fcb9741de44eeea6d3967457b1e6e54e99e0bd8a69e6595d78d3c2dbefbdb"
+    },
+    {
+      "path": "assets/original-source/medal_silver.webp",
+      "bytes": 222,
+      "sha256": "aea8c713d7226fff46ed90edbb30345f48585e07419efc5f814927093afd47b7"
+    },
+    {
+      "path": "assets/original-source/pipe-down.webp",
+      "bytes": 370,
+      "sha256": "3f6415c01b42c8b2e4bc7d33f51dbc561ab2c03f89f8d1fc258d0c7fd989f67e"
+    },
+    {
+      "path": "assets/original-source/pipe-up.webp",
+      "bytes": 378,
+      "sha256": "48a28235ffead8a82c7553d48a42b3a9e0257889461c14871e8bd066661c6a05"
+    },
+    {
+      "path": "assets/original-source/pipe.webp",
+      "bytes": 124,
+      "sha256": "a93c5f667709f9d2930b6e07bf05e1de664d3c174b95dfd91969e1932232dae2"
+    },
+    {
+      "path": "assets/original-source/practice-engine.js",
+      "bytes": 134018,
+      "sha256": "92febedbc61578c145bdcd0dc1a6bf95684311bb9af0155876655c5c557d64da"
+    },
+    {
+      "path": "assets/original-source/replay.webp",
+      "bytes": 426,
+      "sha256": "4a5d43e7d81ebfb8d7c4bd40c890f2f262ffb6e60aecadf0f283ee7924e634a9"
+    },
+    {
+      "path": "assets/original-source/scoreboard.webp",
+      "bytes": 1354,
+      "sha256": "feb375b189ccc27fef61b22e57dd40fff0f068997415e29572b4b87400d666e4"
+    },
+    {
+      "path": "assets/original-source/sky.webp",
+      "bytes": 5832,
+      "sha256": "5902736e2dd8d16daeb76777e25cb5d5d3efbe6fa730fccb33d86a68838e3677"
+    },
+    {
+      "path": "assets/original-source/splash.webp",
+      "bytes": 1188,
+      "sha256": "a2b7bf8cc40ea29a5a6709af7aee0ee8f735453585fa540a35c21604e808e409"
+    },
+    {
+      "path": "assets/original-source/thumb.webp",
+      "bytes": 8032,
+      "sha256": "885320f3c722667c848bc28a312ce774e18eacfb93542c730d55ed8c8a24d87d"
+    },
+    {
+      "path": "assets/reference-game.html",
+      "bytes": 331112,
+      "sha256": "a5526d79e058273e543e316d8112c4eceee408c26707126942adbbd2b8144715"
+    },
+    {
+      "path": "assets/source-classic.html",
+      "bytes": 279525,
+      "sha256": "b1946c357a2faf10ac7ccd75b08537697a6b4ac4ec657827403dfd754e4b7ec1"
+    },
+    {
+      "path": "assets/source-practice.html",
+      "bytes": 331112,
+      "sha256": "a5526d79e058273e543e316d8112c4eceee408c26707126942adbbd2b8144715"
+    },
+    {
+      "path": "backup-inputs/nebez-floppybird-efd2c7f.tar",
+      "bytes": 481280,
+      "sha256": "ac3cbeb6b8ee089821385d626b41867521b351f952523f059edfa0b2880cec38"
+    },
+    {
+      "path": "backup-inputs/template-shell.html",
+      "bytes": 24012,
+      "sha256": "25e31db5a632e7be488b0ac1d5de4109bf1a9f24d7aa984839d98ae571f10229"
+    },
+    {
+      "path": "build-guide.mjs",
+      "bytes": 734,
+      "sha256": "6f2eaedac72f29204e8844ff631ec7ed355769c913f1fd5cc5de276d64149531"
+    },
+    {
+      "path": "build-lesson.mjs",
+      "bytes": 4598,
+      "sha256": "728b5d05481c70a9e107f72ed4b70943e71b1026424b8d401efdaffb48444bc5"
+    },
+    {
+      "path": "dist/_headers",
+      "bytes": 149,
+      "sha256": "c2b41c88ed9572252d2cf25e4c057a3dda722bff67a64078e0cac6f6c77cd9db"
+    },
+    {
+      "path": "dist/assets/background.webp",
+      "bytes": 1512156,
+      "sha256": "c82e595c4efab4e9b2ab25b32ec2f28f7b34b425f60b10e8ec843f8510e957c5"
+    },
+    {
+      "path": "dist/assets/bird-frame-1.webp",
+      "bytes": 24730,
+      "sha256": "1ef00c2d1610450402dda0404abafce3de72535000b67e90c6df44cb74f4a2f4"
+    },
+    {
+      "path": "dist/assets/bird-frame-2.webp",
+      "bytes": 20218,
+      "sha256": "11f76ba4331d519afc2490ca4e2a6795a3b597aef24ecde3a98fa1b408990479"
+    },
+    {
+      "path": "dist/assets/bird-original.webp",
+      "bytes": 896318,
+      "sha256": "413233b61b6664a77c71e8e1de252a0eafbe42b0724490d20a92d112dc498d9f"
+    },
+    {
+      "path": "dist/assets/bird-sprite.webp",
+      "bytes": 44368,
+      "sha256": "02f7bc2bcdd0952e3067845c9c2234f47f36ec78f48fcbae4bf705a59d6d5446"
+    },
+    {
+      "path": "dist/assets/coin-original.webp",
+      "bytes": 965956,
+      "sha256": "71e05afa28d125f3001d1e562c5aecf9a0ea0f7ff7ab61d6c71fdc61abb8994d"
+    },
+    {
+      "path": "dist/assets/coin.webp",
+      "bytes": 39886,
+      "sha256": "fb39dc4f9e556838a93d6d7ad89039c9e2957c7ab2a6cadba73ad61cca7c76a2"
+    },
+    {
+      "path": "dist/board.html",
+      "bytes": 7781,
+      "sha256": "a21f77a94b9a02ede7df21307fe2fe8dcff488b0402cd2d74558c3560afb4195"
+    },
+    {
+      "path": "dist/board.js",
+      "bytes": 9767,
+      "sha256": "1997e2a27195c7da8ccd2f4071675b5f97df4dfa9b67c1f45f410afb8b59ea1b"
+    },
+    {
+      "path": "dist/index.html",
+      "bytes": 7427866,
+      "sha256": "c242295e91d0211fbc791159266d5079b15cffdd5519112db1610ffa330c09fd"
+    },
+    {
+      "path": "dist/reference.html",
+      "bytes": 331112,
+      "sha256": "a5526d79e058273e543e316d8112c4eceee408c26707126942adbbd2b8144715"
+    },
+    {
+      "path": "dist/source-classic.html",
+      "bytes": 279514,
+      "sha256": "374e6229804e1d99e6671b2e97b19f6c257a84e59de51ce1d3228e7a9c696b3c"
+    },
+    {
+      "path": "dist/source-notices/LICENSE",
+      "bytes": 10347,
+      "sha256": "2514772e5475f208616174f81b67168179a7c51bdcb9570a96a9dc5962b83116"
+    },
+    {
+      "path": "dist/source-notices/README.md",
+      "bytes": 3050,
+      "sha256": "3880da48991ba11622663f79225df3ac6abae5595130f7e8a118b25e9a722b9d"
+    },
+    {
+      "path": "dist/source-practice.html",
+      "bytes": 331112,
+      "sha256": "a5526d79e058273e543e316d8112c4eceee408c26707126942adbbd2b8144715"
+    },
+    {
+      "path": "evidence/.gitkeep",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "migrations/0001_rankings.sql",
+      "bytes": 1148,
+      "sha256": "50bf78e9de86562b251a8c127605913ddb393db1a73301bf18b381caf1015592"
+    },
+    {
+      "path": "prompts/01-bird-sprite.txt",
+      "bytes": 1163,
+      "sha256": "a27bdcc01fb5e784f16aec89fef2a1de289e269d60ede15371cd39ac77edf88e"
+    },
+    {
+      "path": "prompts/02-background.txt",
+      "bytes": 1067,
+      "sha256": "b83c9c5a08111813c5c5bf818b2d484d2aa150236971f4de8578bfadcd16644e"
+    },
+    {
+      "path": "prompts/coin-image.txt",
+      "bytes": 767,
+      "sha256": "a26bfa26d10d32589f2b75294a7cbbcafd6b4c6a0916da214942c5ce86e386be"
+    },
+    {
+      "path": "prompts/reference-game.txt",
+      "bytes": 638,
+      "sha256": "5ac897a55ba9d79868299729ae46f16d4d1e296fdbd4e87bbb22beb9e1653263"
+    },
+    {
+      "path": "prompts/ui-repair.txt",
+      "bytes": 195,
+      "sha256": "1be558cb87e987f016a50e969b1f6f2a066747f59541ca1a4607598dc9ed7a6c"
+    },
+    {
+      "path": "src/ai-system.mjs",
+      "bytes": 1989,
+      "sha256": "3b1e8004dc33f021bc2b3731dbbc969159fc40e659ae228b541fc7571ed15110"
+    },
+    {
+      "path": "src/board-api.mjs",
+      "bytes": 5818,
+      "sha256": "3f0d968295679f039e859462b8cf1a110f6f42428c91496039055dd79c08c9bd"
+    },
+    {
+      "path": "src/board-schema.sql",
+      "bytes": 286,
+      "sha256": "0a9e3a883c6b21096a4234bfd8f1e42214c1586c9d7ede6564e87ae0f6bb9e19"
+    },
+    {
+      "path": "src/board.html",
+      "bytes": 7781,
+      "sha256": "a21f77a94b9a02ede7df21307fe2fe8dcff488b0402cd2d74558c3560afb4195"
+    },
+    {
+      "path": "src/board.js",
+      "bytes": 8634,
+      "sha256": "570e351bd3a8a387863974c126e79a0bf9dc8cded3f8d2f46d34961f7584bdf1"
+    },
+    {
+      "path": "src/course-data.mjs",
+      "bytes": 19054,
+      "sha256": "5fbaab746b8c7008ed450b291c3a2ae202be8ef5ec9e203bb8a54b8d82975fed"
+    },
+    {
+      "path": "src/enhanced-flow.js",
+      "bytes": 26394,
+      "sha256": "6944e7770c9008058d154e32c9be92e574f8f669b470f639e1c2ab0e8e7702d2"
+    },
+    {
+      "path": "src/game-history.js",
+      "bytes": 2990,
+      "sha256": "1750287c3644f8905cda8060f6bf6d2b3eccc672fbf5a3cc9b9c2473a21cb57e"
+    },
+    {
+      "path": "src/game-image-guard.js",
+      "bytes": 1132,
+      "sha256": "5b956c795c2211b84f87ab38674b15cea65f623569502ebf0b15f5cd87da2d6a"
+    },
+    {
+      "path": "src/image-generation.mjs",
+      "bytes": 2609,
+      "sha256": "bc08711ea4fa04a7bb52f1649f49b5ee9fc9bdd7d624306f89f6bc65d5002406"
+    },
+    {
+      "path": "src/image-storage.mjs",
+      "bytes": 2076,
+      "sha256": "2b0b3f111be4d813c94b728b4006e3ef85f81964e89b930307d622c00f924993"
+    },
+    {
+      "path": "src/lesson.css",
+      "bytes": 23092,
+      "sha256": "d4969e7e8e4ce57da11e663c73b018788edd60319426be08102e533e2a3a617b"
+    },
+    {
+      "path": "src/lesson.js",
+      "bytes": 32102,
+      "sha256": "e5208ad8759c675d2bb052b3f33100b2e26a0c410e3b9f57a7092ebce2b645cf"
+    },
+    {
+      "path": "src/quiz-data.mjs",
+      "bytes": 5601,
+      "sha256": "9aba02e6feea9c7bd7aed843ea2bec9fd2204d165d164783c3492bfd178a93e5"
+    },
+    {
+      "path": "src/quiz-flow.js",
+      "bytes": 7408,
+      "sha256": "2616a88eaebc318e9ac13de0b89b7735231b96606dd88f63f71163224eb07394"
+    },
+    {
+      "path": "src/quiz-prompt-dialog.js",
+      "bytes": 6367,
+      "sha256": "860edf77c2b2b9a6e64b7de590c3c503ccee76639a4e6d52b4442afbb10a2b39"
+    },
+    {
+      "path": "src/ranking-ingame.js",
+      "bytes": 5480,
+      "sha256": "cd29cf4469fbfb599b7dc663865225a00b161df77bfd2c68ca68ad010311ede4"
+    },
+    {
+      "path": "src/ranking-ui.js",
+      "bytes": 8016,
+      "sha256": "160578f40d5810533f47b8406b94e6574f29dac3ae5d2429d814c9462ca326dc"
+    },
+    {
+      "path": "src/rankings.mjs",
+      "bytes": 9023,
+      "sha256": "e03c424d96dd1264553c71e135eaf2a435950337b5d9fa600afcb3f662e191e0"
+    },
+    {
+      "path": "src/sherpa-ai.mjs",
+      "bytes": 2261,
+      "sha256": "1203981f38afac133fb593f4c607edcc4d69a1542747661efd51b6a43b7d01fb"
+    },
+    {
+      "path": "src/worker.mjs",
+      "bytes": 5093,
+      "sha256": "b814d55e602b9e54f7f75629ef275b2a10bbee42694e0a3acce7b6e9644715d6"
+    },
+    {
+      "path": "wrangler.json",
+      "bytes": 960,
+      "sha256": "9d041c6d5328c97681fd003bf7f16d428e82e021d21e2594fd5ce9d0b8509443"
+    }
+  ]
+}
