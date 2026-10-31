@@ -4,7 +4,7 @@ const HOST='https://ai-lounge-flappy-lesson-20261025.yoon2566.workers.dev';
 /* GAME_IMAGE_GUARD */
 const DEMO={background:'background.webp',character:'bird-frame-1.webp',sprite:'bird-sprite.webp',item:'coin.webp'};
 const LABEL={background:'배경',character:'주인공',sprite:'주인공',item:'아이템',obstacle:'장애물'};
-let state={page:0,gameHTML:'',versions:[],assets:{},urls:{},choices:{},rules:[],repair:0};
+let state={page:0,gameHTML:'',assets:{},urls:{},choices:{},rules:[],repair:0};
 try{Object.assign(state,JSON.parse(localStorage.getItem(STORE)||'{}'));}catch{}
 try{const saved=JSON.parse($('user-state')?.textContent||'null');if(saved)Object.assign(state,saved);}catch{}
 state.gameHTML=safeGameHTML(state.gameHTML);
@@ -42,7 +42,7 @@ function makeLead(root,text){root.append(el('p','lead',text));}
 function content(root){const x=el('div','content');root.append(x);return x;}
 function setStatus(node,text,error=false){node.textContent=text;node.classList.toggle('error',error);}
 function readFile(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('파일을 읽지 못했습니다.'));r.readAsDataURL(file);});}
-function loadImage(src){return new Promise((resolve,reject)=>{const im=new Image();im.crossOrigin='anonymous';im.onload=()=>resolve(im);im.onerror=()=>reject(Error('이미지를 불러오지 못했습니다. 주소와 파일을 확인해 주세요.'));im.src=src;});}
+function loadImage(src){return new Promise((resolve,reject)=>{const im=new Image();im.crossOrigin='anonymous';let settled=false;const finish=error=>{if(settled)return;settled=true;clearTimeout(timer);im.onload=im.onerror=null;error?reject(error):resolve(im);};const timer=setTimeout(()=>finish(Error('이미지 연결이 지연되고 있어요. 다시 시도해 주세요.')),15000);im.onload=()=>{if(!im.naturalWidth)return finish(Error('그림 파일을 읽지 못했습니다.'));Promise.resolve(im.decode?.()).then(()=>finish(),()=>finish(Error('그림 파일을 읽지 못했습니다.')));};im.onerror=()=>finish(Error('이미지를 불러오지 못했습니다. 주소와 파일을 확인해 주세요.'));im.src=src;});}
 function download(name,blob){const url=URL.createObjectURL(blob),a=el('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
 async function copy(text){try{await navigator.clipboard.writeText(text);}catch{const t=el('textarea');t.value=text;document.body.append(t);t.select();document.execCommand('copy');t.remove();}flash('복사했습니다.');}
 function closeDialog(d){d.close();d.remove();}
@@ -54,25 +54,24 @@ function promptDialog(title,text,run){
  if(run){const stop=action('중지',()=>controller?.abort());stop.hidden=true;const apply=action(run.label,async()=>{if(busy||controller||!area.value.trim())return;busy=true;apply.disabled=true;area.disabled=true;close.disabled=true;copyButton.disabled=true;stop.hidden=false;try{await run.fn(area.value,status,d);}catch(e){setStatus(status,e.name==='AbortError'?'중지했습니다. 기존 이미지는 그대로입니다. 다시 시도해 주세요.':e.message,true);}finally{busy=false;apply.disabled=!area.value.trim();area.disabled=false;close.disabled=false;copyButton.disabled=false;stop.hidden=true;}},true);area.oninput=()=>{apply.disabled=!area.value.trim();};bar.append(stop,apply);}
  d.append(area,status,bar);return d;
 }
-function gameDialog(html,title,mode,allowHistory=false){
+function gameDialog(html,title,mode){
  const d=dialog(title),viewport=el('div','game-viewport'),frame=el('iframe'),sourceGame=html.includes('#gamecontainer{width:320px;height:525px;')||html.includes('data-flappy-source="owl-v2"');
- d.classList.add('game-dialog');frame.title=title;frame.setAttribute('sandbox','allow-scripts');
- frame.srcdoc=html.replace(/<\/body\s*>/i,"<script>addEventListener('load',function(){setTimeout(function(){dispatchEvent(new Event('resize'));},80);});<\/script></body>");
+ d.classList.add('game-dialog');frame.title=title;
  viewport.append(frame);const bar=el('div','actions game-toolbar');
  bar.append(action('닫기',()=>closeDialog(d)));
- bar.append(action('HTML 다운로드',()=>download('내가_만든_플래피게임.html',new Blob([html],{type:'text/html;charset=utf-8'}))));
- if(allowHistory)bar.append(gameHistoryButton(restored=>{closeDialog(d);gameDialog(restored,'돌아온 게임',null,true);}));
- d.append(viewport,bar);
+ bar.append(action('HTML 다운로드',()=>download('내가_만든_플래피게임.html',new Blob([safeGameHTML(html)],{type:'text/html;charset=utf-8'}))));
+ const hint=el('p','game-status');hint.setAttribute('role','status');const reload=()=>mountGameFrame(frame,html,status=>{hint.textContent=gameStatusText(status);hint.classList.toggle('error',status.errors.length>0);});bar.append(action('다시 불러오기',reload));d.append(viewport,hint,bar);reload();d.addEventListener('close',()=>frame._gameCleanup?.(),{once:true});
  if(sourceGame&&html.includes('flappy-ranking'))registerRankFrame(frame);
  function fitGame(){if(!sourceGame)return;const w=viewport.clientWidth,h=viewport.clientHeight;if(!w||!h)return;const scale=Math.min(w/320,h/525);frame.classList.add('source-game-zoom');frame.style.transform='scale('+scale+')';frame.style.left=(w-320*scale)/2+'px';frame.style.top=(h-525*scale)/2+'px';}
  const observer=new ResizeObserver(fitGame);observer.observe(viewport);d.addEventListener('close',()=>observer.disconnect(),{once:true});
  frame.onload=()=>{fitGame();if(mode)frame.contentWindow.postMessage({channel:'flappy-lesson',command:'mode',mode},'*');if(document.querySelector('dialog[open]:last-of-type')===d)frame.focus();};
  requestAnimationFrame(fitGame);
 }
-function pendingImageStage(){for(const kind of ['background','sprite','item','obstacle']){if(!assetSrc(kind,kind!=='background'))return pageOf(kind==='sprite'?'remove':kind);if(!state.urls[kind])return pageOf('remove');if(state.gameHTML&&!state.gameHTML.includes(state.urls[kind]))return pageOf(kind==='background'?'apply-bg':'apply-'+kind);}return null;}
-function myGame(){if(state.gameHTML)gameDialog(state.gameHTML,'내가 만든 게임',null,true);else{const d=dialog('먼저 기본 게임을 만들어 주세요'),bar=el('div','actions');bar.append(action('닫기',()=>closeDialog(d)),gameCreationAction(()=>{closeDialog(d);goToGameCreation();}));d.append(bar);}}
-function getGame(){const input=el('input');input.type='file';input.accept='.html,text/html';input.onchange=async()=>{if(!input.files[0])return;const html=await input.files[0].text();input.remove();if(!/<html[\s>]/i.test(html)||!/<script[\s>]/i.test(html)){flash('실행할 수 있는 게임 HTML을 선택해 주세요.');return;}rememberGame(html);render();};input.style.display='none';document.body.append(input);input.addEventListener('cancel',()=>input.remove(),{once:true});input.click();}
-/* GAME_HISTORY */
+function imageApplied(kind){return Boolean(state.urls[kind]&&readGameAssets(state.gameHTML)[kind]?.url===state.urls[kind]);}
+function pendingImageStage(){for(const kind of ['background','sprite','item','obstacle']){if(!assetSrc(kind,kind!=='background'))return pageOf(kind==='sprite'?'remove':kind);if(!state.urls[kind])return pageOf('remove');if(state.gameHTML&&!imageApplied(kind))return pageOf(kind==='background'?'apply-bg':'apply-'+kind);}return null;}
+function myGame(){if(state.gameHTML)gameDialog(state.gameHTML,'내가 만든 게임',null);else{const d=dialog('먼저 기본 게임을 만들어 주세요'),bar=el('div','actions');bar.append(action('닫기',()=>closeDialog(d)),gameCreationAction(()=>{closeDialog(d);goToGameCreation();}));d.append(bar);}}
+function getGame(){const input=el('input');input.type='file';input.accept='.html,text/html';input.onchange=async()=>{if(!input.files[0])return;const html=await input.files[0].text();input.remove();if(!/<html[\s>]/i.test(html)||!/<script[\s>]/i.test(html)){flash('실행할 수 있는 게임 HTML을 선택해 주세요.');return;}const popup=openLessonPromptDialog({value:''});popup.showGame({html:safeGameHTML(html),onNext:()=>{setCurrentGame(html);popup.close();render();}});};input.style.display='none';document.body.append(input);input.addEventListener('cancel',()=>input.remove(),{once:true});input.click();}
+function setCurrentGame(html){state.gameHTML=safeGameHTML(html);save();}
 async function apiImage(prompt,status){
  if(location.protocol==='file:')throw Error('AI 실습은 배포된 수업 주소에서 실행해 주세요. 프롬프트 복사는 이 파일에서도 가능합니다.');
  controller=new AbortController();setStatus(status,'Recraft로 이미지를 만들고 있어요…');
@@ -87,11 +86,14 @@ async function apiText(prompt,status,existing='',purpose='game'){
   return answer;
  }finally{controller=null;}
 }
-async function apiGame(prompt,status,existing=''){
- const answer=await apiText(prompt,status,existing);
+async function apiGame(prompt,status,existing='',imageKind=null){
+ const assets=readGameAssets(existing);
+ if(imageKind){const asset=state.assets[imageKind],url=state.urls[imageKind];if(!asset||!url)throw Error('적용할 그림을 먼저 준비해 주세요.');await verifyHostedImage(url);assets[imageKind]={url,width:asset.width,height:asset.height};}
+ const contract=Object.keys(assets).length?'\n\n[실행 환경의 이미지 연결 규칙]\n이 HTML에는 공통 이미지 로더가 자동으로 포함됩니다. window.FlappyLessonImages.ready는 모든 이미지가 로드·디코딩된 뒤 {background, sprite, item, obstacle} 중 아래 지정된 Image 객체들을 반환하는 Promise입니다. async 초기화 함수에서 const images = await window.FlappyLessonImages.ready; 로 기다린 뒤 images.background 등으로 그려 주세요. 직접 새 Image를 만들거나 로더를 재정의하지 마세요. 시작 버튼은 준비 뒤 활성화하고, 준비 직후에도 주인공·배경과 아이템·장애물 예시를 게임 화면에 실제로 그려 확인할 수 있게 해 주세요. try/catch로 로드 실패를 화면에 표시하세요. getImageData/toDataURL 픽셀 분석은 쓰지 말고, 그림 크기에 맞춘 단순한 몸통 충돌 상자를 사용하세요. 아래에 없는 종류는 기존 도형과 규칙을 유지합니다. 기존에 적용한 이미지도 빠짐없이 유지하세요.\n'+JSON.stringify(assets):'';
+ const answer=await apiText(prompt+contract,status,stripGameRuntime(existing));
  const html=answer.match(/```html\s*\n([\s\S]*?)```/i)?.[1]||answer.slice(answer.search(/<!doctype html|<html/i));
- if(!/<\/html\s*>/i.test(html))throw Error('완성된 HTML을 받지 못했습니다. 다시 요청해 주세요.');
- const repaired=safeGameHTML(html);rememberGame(repaired);setStatus(status,'게임을 만들었습니다. 미리보기에서 직접 확인해 주세요.');return repaired;
+ if(!/<\/html\s*>/i.test(html)||!/<script[\s>]/i.test(stripGameRuntime(html)))throw Error('실행할 수 있는 완성된 HTML을 받지 못했습니다. 다시 요청해 주세요.');
+ const repaired=safeGameHTML(html,{assets});setStatus(status,'게임을 만들었습니다. 그림과 실행 상태를 확인하고 있어요.');return repaired;
 }
 function assetPrompt(kind,subject){
  const style='작은 네모가 또렷한 2D 픽셀 게임 그림으로 만들어 줘. 흐림 효과, 사진 같은 표현, 입체 효과, 글자와 워터마크는 넣지 마.';
@@ -100,7 +102,7 @@ function assetPrompt(kind,subject){
  if(kind==='character'||kind==='sprite'){const character=kind==='character'?subject:state.choices.character||'노란 몸과 파란 날개의 작은 새';const motion=kind==='sprite'?subject:/날개|새/.test(character)?'날개를 위로 올린 모습 / 아래로 내린 모습':/공룡|동물/.test(character)?'다리를 앞으로 뻗은 모습 / 뒤로 뻗은 모습':/로봇/.test(character)?'추진기가 약하게 켜진 모습 / 강하게 켜진 모습':'몸을 살짝 움츠린 모습 / 편 모습';return '주인공: '+character+'\n움직임: '+motion+'\n가로로 긴 16:9 그림 한 장에 같은 주인공의 두 동작을 함께 만들어 줘. 그림을 같은 크기의 가로 두 칸으로 나누고 한 칸에 주인공 하나씩 배치해 줘. 두 칸 모두 오른쪽을 바라보게 해 줘. 몸 크기·위치·색·눈의 위치는 같게 유지하고 움직이는 부분만 바꿔 줘. 좌우로 뒤집지 말고 전신이 잘리지 않게 해 줘. 칸 구분선과 글자는 넣지 마.\n'+style+'\n'+key;}
  return '모을 아이템: '+subject+'\n아이템 하나를 정사각형 그림 가운데에 크게 그려 줘. 작게 보여도 알아보기 쉬워야 해. 주인공('+ (state.assets.character?.subject||state.choices.character||'노란 몸과 파란 날개의 작은 새') +')과 같은 그림체와 어울리는 색을 써 줘.\n'+style+'\n'+key;
 }
-function applyPrompt(kind,url){const a=state.assets.sprite||{},width=a.width||512,height=a.height||256,interval=Math.max(0.1,Math.min(0.7,Number(state.spriteInterval)||0.3)).toFixed(1);const common='기존 게임의 상승·중력, 코인 획득 시 한 번 +1점, 장애물·바닥 충돌 종료, 다시 시작은 유지해 줘. 파이프가 남아 있으면 모두 제거해 줘. 시간 제한은 넣지 마. 외부 이미지는 반드시 Image 객체의 crossOrigin을 anonymous로 설정한 다음 src를 지정해 줘. 캔버스 getImageData로 픽셀을 읽을 때도 이 순서를 지켜 줘. 이미지 로드 실패와 픽셀 분석 오류를 구분해 실제 오류 원인을 표시해 줘. 이미지 로딩 성공 후에만 시작하게 하고, 실패하면 오류와 재시도 버튼을 보여 줘. 수정한 전체 HTML을 html 코드블록 하나로 제공해 줘.';if(kind==='background')return `현재 게임의 배경을 다음 이미지 URL로 바꿔 줘.\n배경 URL: ${url}\n게임 화면을 채우고 왼쪽으로 천천히 반복되게 해 줘. 높이에 맞춰 그린 이미지 너비를 기준으로 반복해서 경계에서 튀지 않게 해 줘.\n${common}`;if(kind==='sprite')return `현재 게임의 주인공을 다음 투명 WebP 스프라이트로 바꿔 줘.\n주인공 URL: ${url}\n전체 크기는 ${width}×${height}px, 가로 2칸이야. 한 프레임은 ${Math.floor(width/2)}×${height}px야. 두 칸 모두 오른쪽을 보고 있어. 왼쪽 칸과 오른쪽 칸을 ${interval}초(${Math.round(Number(interval)*1000)}밀리초)마다 번갈아 잘라 그려 줘. 전체 이미지를 한 번에 그리지 마. 게임 화면에서 한 칸은 약 64×64px로 그려 주인공이 잘 보이게 해 줘. 주인공의 몸 위치가 흔들리지 않게 하고, 투명 여백을 제외한 몸 중심으로 충돌을 계산해 줘.\n${common}`;if(kind==='obstacle')return `현재 게임의 검은 구름 장애물 그림을 다음 투명 WebP로 바꿔 줘.\n장애물 URL: ${url}\n기존 장애물 생성·이동·충돌 판정은 유지하고 그림만 바꿔 줘. 닿으면 즉시 게임오버이고, 장애물을 먹는 점수는 없어. 이미지 전체가 아닌 실제 몸 영역으로 충돌을 계산해 줘.\n${common}`;return `현재 게임에서 모으는 아이템의 그림만 다음 투명 WebP 이미지로 바꿔 줘.\n아이템 URL: ${url}\n아이템에 닿으면 그림이 사라지고 점수가 1점 오르는 규칙을 유지해 줘. 작아도 잘 보이는 크기로 그려 줘.\n${common}`;}
+function applyPrompt(kind,url){const a=state.assets.sprite||{},width=a.width||512,height=a.height||256,interval=Math.max(0.1,Math.min(0.7,Number(state.spriteInterval)||0.3)).toFixed(1);const common='기존 게임의 상승·중력, 코인 획득 시 한 번 +1점, 장애물·바닥 충돌 종료, 다시 시작은 유지해 줘. 파이프가 남아 있으면 모두 제거해 줘. 시간 제한은 넣지 마. 이미지 로딩이 끝난 뒤 그리기와 시작 버튼을 활성화해 줘. 준비 화면에서도 적용한 그림을 볼 수 있게 해 줘. 그림의 픽셀을 분석하지 말고 몸통에 맞는 단순한 충돌 상자를 사용해 줘. 이미지 로드 실패는 화면에 알려 줘. 수정한 전체 HTML을 html 코드블록 하나로 제공해 줘.';if(kind==='background')return `현재 게임의 배경을 다음 이미지 URL로 바꿔 줘.\n배경 URL: ${url}\n게임 화면을 채우고 왼쪽으로 천천히 반복되게 해 줘. 높이에 맞춰 그린 이미지 너비를 기준으로 반복해서 경계에서 튀지 않게 해 줘.\n${common}`;if(kind==='sprite')return `현재 게임의 주인공을 다음 투명 WebP 스프라이트로 바꿔 줘.\n주인공 URL: ${url}\n전체 크기는 ${width}×${height}px, 가로 2칸이야. 한 프레임은 ${Math.floor(width/2)}×${height}px야. 두 칸 모두 오른쪽을 보고 있어. 왼쪽 칸과 오른쪽 칸을 ${interval}초(${Math.round(Number(interval)*1000)}밀리초)마다 번갈아 잘라 그려 줘. 전체 이미지를 한 번에 그리지 마. 게임 화면에서 한 칸은 약 64×64px로 그려 주인공이 잘 보이게 해 줘. 주인공의 몸 위치가 흔들리지 않게 하고, 투명 여백을 제외한 몸 중심으로 충돌을 계산해 줘.\n${common}`;if(kind==='obstacle')return `현재 게임의 검은 구름 장애물 그림을 다음 투명 WebP로 바꿔 줘.\n장애물 URL: ${url}\n기존 장애물 생성·이동·충돌 판정은 유지하고 그림만 바꿔 줘. 닿으면 즉시 게임오버이고, 장애물을 먹는 점수는 없어. 이미지 전체가 아닌 실제 몸 영역으로 충돌을 계산해 줘.\n${common}`;return `현재 게임에서 모으는 아이템의 그림만 다음 투명 WebP 이미지로 바꿔 줘.\n아이템 URL: ${url}\n아이템에 닿으면 그림이 사라지고 점수가 1점 오르는 규칙을 유지해 줘. 작아도 잘 보이는 크기로 그려 줘.\n${common}`;}
 function normalizeTransparent(source,kind){
  const ctx=source.getContext('2d',{willReadFrequently:true}),w=source.width,h=source.height,rgba=ctx.getImageData(0,0,w,h).data,count=kind==='sprite'?2:1,cell=Math.floor(w/count),parts=[];
  for(let f=0;f<count;f++){const info={x0:cell,y0:h,x1:0,y1:0,hist:new Map()};for(let y=0;y<h;y++)for(let x=0;x<cell;x++){const i=(y*w+f*cell+x)*4;if(rgba[i+3]<128)continue;info.x0=Math.min(info.x0,x);info.y0=Math.min(info.y0,y);info.x1=Math.max(info.x1,x+1);info.y1=Math.max(info.y1,y+1);const key=((rgba[i]>>4)<<8)|((rgba[i+1]>>4)<<4)|(rgba[i+2]>>4);const v=info.hist.get(key)||{n:0,x:0,y:0};v.n++;v.x+=x;v.y+=y;info.hist.set(key,v);}if(info.x1<=info.x0)throw Error('비어 있는 프레임이 있습니다. 두 동작이 들어 있는 그림을 선택해 주세요.');parts.push(info);}
@@ -144,15 +146,16 @@ async function saveAsset(kind,src,clean=false){
  save();
 }
 function syncImageURL(kind,url){document.querySelectorAll('[data-asset-url="'+kind+'"]').forEach(input=>{if(input!==document.activeElement||!input.value)input.value=url;});}
-const hostingJobs=new Map();
+const hostingJobs=new Map(),verifiedHostedImages=new Map();
+async function verifyHostedImage(url){if(verifiedHostedImages.has(url)&&Date.now()-verifiedHostedImages.get(url)<30000)return;await loadImage(url);verifiedHostedImages.set(url,Date.now());}
 async function imageFingerprint(src){const bytes=new TextEncoder().encode(src);const digest=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');}
 async function ensureHosted(kind,src){
  if(location.protocol==='file:')throw Error('이미지 주소 만들기는 온라인 수업에서 실행해 주세요.');
- if(assetSrc(kind,kind!=='background')!==src)throw Error('이미지가 바뀌었습니다. 새 이미지로 다시 시도해 주세요.');if(kind!=='background'&&!state.assets[kind]?.acceptedUnverified)await verifyCleanAsset(src);const fingerprint=await imageFingerprint(src);state.hosted ||= {};state.hostedCache ||= {};if(state.hostedCache[fingerprint])state.hosted[kind]={fingerprint,url:state.hostedCache[fingerprint]};
- if(state.hosted[kind]?.fingerprint===fingerprint){state.urls[kind]=state.hosted[kind].url;syncImageURL(kind,state.urls[kind]);save();return state.urls[kind];}
+ if(assetSrc(kind,kind!=='background')!==src)throw Error('이미지가 바뀌었습니다. 새 이미지로 다시 시도해 주세요.');if(kind!=='background'&&!state.assets[kind]?.acceptedUnverified)await verifyCleanAsset(src);const fingerprint=await imageFingerprint(src);if(assetSrc(kind,kind!=='background')!==src)throw Error('이미지가 바뀌었습니다. 새 이미지로 다시 시도해 주세요.');state.hosted ||= {};state.hostedCache ||= {};if(state.hostedCache[fingerprint])state.hosted[kind]={fingerprint,url:state.hostedCache[fingerprint]};
+ if(state.hosted[kind]?.fingerprint===fingerprint){const cached=state.hosted[kind].url;let reachable=true;try{await verifyHostedImage(cached);}catch{reachable=false;}if(assetSrc(kind,kind!=='background')!==src)throw Error('이미지가 바뀌었습니다. 새 이미지로 다시 시도해 주세요.');if(reachable){state.urls[kind]=cached;syncImageURL(kind,cached);save();return cached;}delete state.hostedCache[fingerprint];delete state.hosted[kind];delete state.urls[kind];}
  const key=kind+':'+fingerprint;
  if(hostingJobs.has(key))return hostingJobs.get(key);
- const job=(async()=>{const webp=src.startsWith('data:image/webp')?src:await webpFromSource(src);const blob=await(await fetch(webp)).blob();const response=await fetch('/api/assets',{method:'POST',headers:{'Content-Type':'image/webp'},body:blob});const out=await response.json();if(!response.ok)throw Error(out.error||'이미지 주소를 만들지 못했습니다.');
+ const job=(async()=>{const webp=src.startsWith('data:image/webp')?src:await webpFromSource(src);const blob=await(await fetch(webp)).blob();if(blob.size>2*1024*1024)throw Error('그림이 너무 큽니다. 2MB 이하의 WebP로 준비해 주세요.');const uploadController=new AbortController(),timeout=setTimeout(()=>uploadController.abort(),25000);let out;try{const response=await fetch('/api/assets',{method:'POST',headers:{'Content-Type':'image/webp'},body:blob,signal:uploadController.signal});out=await response.json();if(!response.ok)throw Error(out.error||'이미지 주소를 만들지 못했습니다.');}catch(error){if(error.name==='AbortError')throw Error('그림 저장이 지연되고 있어요. 다시 시도해 주세요.');throw error;}finally{clearTimeout(timeout);}if(typeof out.url!=='string'||!/^https?:\/\//.test(out.url))throw Error('그림 주소를 받지 못했습니다. 다시 시도해 주세요.');await verifyHostedImage(out.url);
  if(assetSrc(kind,kind!=='background')!==src)throw Error('이미지가 바뀌었습니다. 새 이미지로 다시 시도해 주세요.');
  state.hosted[kind]={fingerprint,url:out.url};state.hostedCache[fingerprint]=out.url;state.urls[kind]=out.url;syncImageURL(kind,out.url);save();return out.url;})();hostingJobs.set(key,job);try{return await job;}finally{hostingJobs.delete(key);}
 }
@@ -166,12 +169,12 @@ function buildSlide(slide){
  if(slide.type==='goals'){const list=el('div','goals-list');slide.goals.forEach((text,i)=>{const row=el('div','goal-row');row.append(el('div','goal-number',String(i+1).padStart(2,'0')),el('div','editable goal-text',text));list.append(row);});root.append(list);return root;}
  if(slide.type==='explanation'){root.append(el('div','editable explanation-body',slide.body));const flow=el('div','flow');slide.flow.forEach((word,i)=>{if(i)flow.append(el('div','flow-arrow','→'));flow.append(el('div','flow-word',word));});root.append(el('div','flow-line'),flow);return root;}
  if(slide.type==='play'){
- makeLead(root,slide.mode==='final'&&!state.gameHTML?'기본 게임을 만든 뒤 이곳에서 확인할 수 있어요.':slide.mode==='final'&&pendingImageStage()!==null?'현재 게임입니다. 원하면 새 이미지를 추가로 적용할 수 있어요.':slide.caption);const frame=el('iframe','play-frame');frame.title=slide.mode==='classic'?'별빛 비행 — 부엉이 게임':slide.mode==='practice'?'코인 모으기 게임':'학생의 최신 게임';frame.setAttribute('sandbox','allow-scripts');
- const doc=slide.mode==='final'?(state.gameHTML||'<!doctype html><html lang="ko"><body><p>먼저 기본 게임을 만들어 주세요.</p></body></html>'):data.sourceGames[slide.mode];frame.srcdoc=doc;if(slide.mode!=='final')frame.classList.add('source-game-frame');currentFrame=frame;root.append(frame);
+ makeLead(root,slide.mode==='final'&&!state.gameHTML?'기본 게임을 만든 뒤 이곳에서 확인할 수 있어요.':slide.mode==='final'&&pendingImageStage()!==null?'현재 게임입니다. 원하면 새 이미지를 추가로 적용할 수 있어요.':slide.caption);const frame=el('iframe','play-frame');frame.title=slide.mode==='classic'?'별빛 비행 — 부엉이 게임':slide.mode==='practice'?'코인 모으기 게임':'학생의 최신 게임';
+ const doc=slide.mode==='final'?(state.gameHTML||'<!doctype html><html lang="ko"><body><p>먼저 기본 게임을 만들어 주세요.</p></body></html>'):data.sourceGames[slide.mode];if(slide.mode!=='final')frame.classList.add('source-game-frame');currentFrame=frame;root.append(frame);const gameHint=el('p','play-status');gameHint.setAttribute('role','status');if(slide.mode==='final')root.append(gameHint);const reload=()=>mountGameFrame(frame,doc,status=>{gameHint.textContent=status.errors.length?gameStatusText(status):'';});reload();
  const bar=el('div','play-buttons');if(slide.mode==='classic')registerRankFrame(frame);
- if(slide.mode!=='final'||state.gameHTML)bar.append(action('크게 보기',()=>gameDialog(doc,frame.title,null,slide.mode==='final'),false,true));
+ if(slide.mode!=='final'||state.gameHTML)bar.append(action('크게 보기',()=>gameDialog(doc,frame.title,null),false,true));
  if(slide.mode==='practice')bar.append(setSlidePrimary(root,action('다음 단계',()=>go(pageOf('coin-observe')),true)));
- if(slide.mode==='final'){if(state.gameHTML){if(pendingImageStage()!==null)bar.append(action('새 이미지 적용하기',()=>go(pendingImageStage()),true,true));bar.append(action('내 게임 보기',myGame,false,true),setSlidePrimary(root,action('오류 확인하기 →',()=>go(pageOf('repair')),true)));}else bar.append(setSlidePrimary(root,gameCreationAction()));}root.append(bar);return root;}
+ if(slide.mode==='final'){if(state.gameHTML){if(pendingImageStage()!==null)bar.append(action('새 이미지 적용하기',()=>go(pendingImageStage()),true,true));bar.append(action('내 게임 보기',myGame,false,true),action('다시 불러오기',reload,false,true),setSlidePrimary(root,action('오류 확인하기 →',()=>go(pageOf('repair')),true)));}else bar.append(setSlidePrimary(root,gameCreationAction()));}root.append(bar);return root;}
 
  if(slide.type==='intro'){
   makeLead(root,slide.body);
@@ -188,15 +191,15 @@ function buildSlide(slide){
 }
 function fit(){const root=$('slide-content').firstElementChild;if(!root)return;const wrap=$('slide-wrap'),scale=wrap.clientWidth/1280,nav=$('slide-next');root.style.transform='scale('+scale+')';wrap.style.setProperty('--next-space-bottom',Math.max(112,Math.ceil(((nav?.offsetHeight||0)+wrap.clientHeight*.044+8)/scale))+'px');wrap.style.setProperty('--next-space-right',Math.max(292,Math.ceil(((nav?.offsetWidth||0)+wrap.clientWidth*.047+16)/scale))+'px');const title=root.querySelector('.title');let size=root.classList.contains('cover')?99:92;title.style.fontSize=size+'px';while((title.scrollWidth>title.clientWidth+1||title.scrollHeight>title.clientHeight+1)&&size>57)title.style.fontSize=(--size)+'px';root.querySelectorAll('.goal-text').forEach(x=>{let n=44;x.style.fontSize=n+'px';while(x.scrollHeight>x.clientHeight+1&&n>32)x.style.fontSize=(--n)+'px';});root.querySelectorAll('.quiz-options .action').forEach(button=>{let n=25;button.style.fontSize=n+'px';while(button.scrollWidth>button.clientWidth+1&&n>18)button.style.fontSize=(--n)+'px';});}
 function render(){
- if(animation){clearInterval(animation);animation=null;}currentFrame=null;
+ if(animation){clearInterval(animation);animation=null;}currentFrame?._gameCleanup?.();currentFrame=null;
  const slide=data.slides[state.page],root=buildSlide(slide);
  if(['cover','goals','explanation','intro'].includes(slide.type)||(slide.type==='play'&&slide.mode==='classic'))setSlidePrimary(root,action('다음 →',()=>{go(state.page+1);$('lesson-stage').focus({preventScroll:true});},true));
  $('slide-content').replaceChildren(root);mountSlidePrimary(root);
- $('page-number').value=state.page+1;$('page-total').textContent='/ '+data.slides.length;$('previous').disabled=state.page===0;
+ $('page-number').value=state.page+1;$('page-total').textContent='/ '+data.slides.length;$('previous').disabled=state.page===0;$('next').disabled=state.page===data.slides.length-1;
  document.title=slide.title.replace(/\n/g,' ')+' · AI 셰르파 2차';fit();requestAnimationFrame(fit);
 }
 function go(page){if(page<0||page>=data.slides.length)return;state.page=page;save();render();}
-$('previous').onclick=()=>go(state.page-1);$('page-number').oninput=event=>{const n=Number(event.target.value);if(Number.isInteger(n)&&n>=1&&n<=data.slides.length)go(n-1);};$('page-number').onchange=()=>{$('page-number').value=state.page+1;};
+$('previous').onclick=()=>go(state.page-1);$('next').onclick=()=>go(state.page+1);$('page-number').oninput=event=>{const n=Number(event.target.value);if(Number.isInteger(n)&&n>=1&&n<=data.slides.length)go(n-1);};$('page-number').onchange=()=>{$('page-number').value=state.page+1;};
 $('open-haiku').onclick=()=>window.open('https://haiku-effort-chat.yoon2566.workers.dev/','_blank','noopener');
 $('save-course').onclick=()=>{const clone=document.documentElement.cloneNode(true);clone.querySelectorAll('.lesson-dialog,.prompt-dialog').forEach(x=>x.remove());clone.querySelector('#slide-content').replaceChildren();let saved=clone.querySelector('#user-state');if(!saved){saved=document.createElement('script');saved.id='user-state';saved.type='application/json';clone.querySelector('body').insertBefore(saved,clone.querySelector('body > script:last-of-type'));}saved.textContent=JSON.stringify(state).replace(/</g,'\\u003c');download('AI이미지로_내게임만들기_수업'+data.slides.length+'장.html',new Blob(['<!doctype html>\n'+clone.outerHTML],{type:'text/html;charset=utf-8'}));};
 window.addEventListener('hashchange',()=>{const m=location.hash.match(/^#slide=(\d+)$/);if(m)go(Number(m[1])-1);});

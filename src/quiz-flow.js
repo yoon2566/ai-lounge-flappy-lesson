@@ -6,11 +6,11 @@ function goToGameCreation(){
  save();go(pageOf('observe'));
 }
 function gameCreationAction(onClick=goToGameCreation){const button=action('기본 게임 만들러 가기',onClick,true);button.classList.add('game-create-action');return button;}
-function editCurrentGame(prompt,nextPage,existing=true,onInput){
+function editCurrentGame(prompt,nextPage,existing=true,onInput,imageKind=null){
  const missingGame=existing&&!state.gameHTML;
  let popup;popup=openLessonPromptDialog({value:prompt,applyLabel:missingGame?'기본 게임 만들러 가기':existing?'수정·재실행':'게임 만들기',requiresValue:!missingGame,instructionText:missingGame?'기본 게임을 만든 뒤 이 프롬프트를 적용할 수 있어요.':undefined,onInput,onStop:()=>controller?.abort(),onApply:async text=>{
  if(existing&&!state.gameHTML){onInput?.(text);popup.close();goToGameCreation();return;}if(controller)return;popup.update({busy:true,message:'게임을 만들고 있어요…'});
- try{const html=await apiGame(text,popup.status,existing?state.gameHTML:'');existing=true;popup.showGame({html,onNext:()=>{popup.close();go(nextPage);}});}catch(e){popup.update({message:e.name==='AbortError'?'중지했습니다. 다시 시도할 수 있어요.':e.message});}
+ try{const html=await apiGame(text,popup.status,existing?state.gameHTML:'',imageKind);popup.showGame({html,onNext:()=>{setCurrentGame(html);popup.close();go(nextPage);}});}catch(e){popup.update({message:e.name==='AbortError'?'중지했습니다. 현재 게임은 그대로입니다. 다시 시도할 수 있어요.':e.message});}
  }});if(missingGame){popup.apply.classList.add('game-create-action');popup.update({message:'먼저 기본 게임을 만들어 주세요.'});}return popup;
 }
 function buildActivity(box,slide){

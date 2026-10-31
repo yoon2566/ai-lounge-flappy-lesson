@@ -70,19 +70,13 @@
 .lesson-dialog:not(.game-dialog) textarea{flex:1;min-height:80px;resize:none;max-height:50dvh}
 .lesson-dialog:not(.game-dialog) .actions{flex:none;flex-wrap:wrap}.lesson-dialog .muted{font-size:16px;line-height:1.4;margin:0 0 10px}
 .prompt-dialog-footer,.error-actions{flex-wrap:wrap}
-.lesson-dialog.game-history-dialog{height:88dvh;gap:10px}
-.game-history-dialog h2,.game-history-dialog .muted,.game-history-label{flex:none}
-.game-history-label{display:flex;align-items:center;gap:12px;font-size:18px}
-.game-history-label select{flex:1;min-width:0;font:inherit;padding:8px;border:1px solid #b8bcb6;border-radius:6px;background:#fff}
-.lesson-dialog.game-history-dialog iframe{flex:1;min-height:100px;height:auto}
-.game-history-dialog .actions{justify-content:space-between;margin-top:0}
 .prompt-game-result .error-result-footer{flex-wrap:wrap;gap:8px}
 .prompt-game-result .error-actions{gap:8px}
-@media(max-width:650px){.game-history-label{flex-direction:column;align-items:stretch;gap:5px}.prompt-game-result .error-actions button{font-size:15px;padding:8px 10px}}
+@media(max-width:650px){.prompt-game-result .error-actions button{font-size:15px;padding:8px 10px}}
 .flow-content>.sprite-layout,.flow-content>.studio-layout,.flow-content>.apply-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);overflow-x:hidden}.flow-content>.sprite-layout>div,.frame-controls>div{min-width:0}.frame-controls input{min-width:0;box-sizing:border-box}
 .remove-actions{gap:7px;flex-wrap:wrap}.remove-actions .action{font-size:18px;padding:8px 12px}.remove-actions [hidden]{display:none!important}
 .speed-control{margin-top:12px}.speed-control span{font-weight:700}
-/* One actual step action in a shared position; no second page-skip button. */
+/* Step actions stay inside the slide; the footer moves between pages. */
 [data-step-action]:not(.slide-next){display:none!important}
 .slide-action{position:absolute;right:4.7%;bottom:4.4%;z-index:3;width:max-content;min-width:14%;max-width:70%}
 .slide-action[hidden]{display:none}
@@ -98,3 +92,4 @@
 .slide-action>.slide-next:disabled{background:#d8dcd7;border-color:#d8dcd7;color:#637065;opacity:1;cursor:default;box-shadow:none}
 @media(max-width:650px){.prompt-dialog-footer .game-create-action,.lesson-dialog .actions .game-create-action{font-size:16px;padding:10px 12px}.lesson-dialog .actions:has(.game-create-action){gap:8px}}
 .lesson-dialog.background-editor{width:min(900px,94vw);height:min(800px,90dvh);gap:8px}.background-editor .erase-wrap{flex:1;min-height:100px;display:flex;align-items:center;justify-content:center;overflow:hidden}.background-editor .erase-canvas{max-width:100%;max-height:100%;object-fit:contain;touch-action:none;cursor:crosshair}.background-editor .erase-size{display:flex;align-items:center;gap:6px;font-size:16px}.background-editor .erase-size input{width:100px}.background-editor .actions{gap:6px}.background-editor .actions button{font-size:16px;padding:8px 11px}
+.controls{font-size:15px;gap:12px}.controls button{min-height:40px;min-width:72px;font-weight:700}.controls .page-number{width:36px}.game-status{flex:none;font-size:16px;line-height:1.45;margin:0;color:#5f6c68}.game-status.error,.error-result-hint.error{color:#ae3920}.play-status{position:absolute;left:62px;right:62px;top:565px;max-height:40px;overflow:auto;font-size:18px;color:#ae3920}.play-status:empty{display:none}.prompt-game-result .error-result-footer{display:flex;flex-direction:column;align-items:stretch}.prompt-game-result .error-actions{justify-content:flex-end}.error-result-hint{font-size:17px}.game-toolbar{flex-wrap:wrap}@media(max-width:700px){body{grid-template-rows:minmax(0,1fr) 100px}.slide-wrap{width:min(calc(100vw - 20px),calc((100dvh - 126px)*16/9))}.controls{justify-content:center;gap:7px;font-size:14px;padding:4px 10px 40px}.controls button{min-width:68px}.class-links{left:0;right:0;bottom:3px;justify-content:center}.game-status{font-size:13px}.prompt-game-result .error-result-hint{font-size:14px}.prompt-game-result .error-actions{gap:6px}}
