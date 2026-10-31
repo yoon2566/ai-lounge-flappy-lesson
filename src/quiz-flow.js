@@ -1,8 +1,17 @@
+function goToGameCreation(){
+ const st=state.activities.observe ||= {index:0,answers:{},sentences:{},review:false};
+ st.answers ||= {};st.sentences ||= {};
+ const unfinished=data.questions.findIndex((question,i)=>st.answers[i]!==question.answer);
+ st.review=unfinished===-1;st.index=unfinished===-1?data.questions.length-1:unfinished;
+ save();go(pageOf('observe'));
+}
+function gameCreationAction(onClick=goToGameCreation){const button=action('기본 게임 만들러 가기',onClick,true);button.classList.add('game-create-action');return button;}
 function editCurrentGame(prompt,nextPage,existing=true,onInput){
- let popup;popup=openLessonPromptDialog({value:prompt,applyLabel:existing?'수정·재실행':'게임 만들기',onInput,onStop:()=>controller?.abort(),onApply:async text=>{
- if(controller)return;if(existing&&!state.gameHTML){popup.update({message:'수정할 게임을 먼저 만들거나 HTML을 불러와 주세요.'});return;}popup.update({busy:true,message:'게임을 만들고 있어요…'});
+ const missingGame=existing&&!state.gameHTML;
+ let popup;popup=openLessonPromptDialog({value:prompt,applyLabel:missingGame?'기본 게임 만들러 가기':existing?'수정·재실행':'게임 만들기',requiresValue:!missingGame,instructionText:missingGame?'기본 게임을 만든 뒤 이 프롬프트를 적용할 수 있어요.':undefined,onInput,onStop:()=>controller?.abort(),onApply:async text=>{
+ if(existing&&!state.gameHTML){onInput?.(text);popup.close();goToGameCreation();return;}if(controller)return;popup.update({busy:true,message:'게임을 만들고 있어요…'});
  try{const html=await apiGame(text,popup.status,existing?state.gameHTML:'');existing=true;popup.showGame({html,onNext:()=>{popup.close();go(nextPage);}});}catch(e){popup.update({message:e.name==='AbortError'?'중지했습니다. 다시 시도할 수 있어요.':e.message});}
- }});return popup;
+ }});if(missingGame){popup.apply.classList.add('game-create-action');popup.update({message:'먼저 기본 게임을 만들어 주세요.'});}return popup;
 }
 function buildActivity(box,slide){
  const root=box.parentElement;
@@ -22,10 +31,10 @@ function buildActivity(box,slide){
 const errorQuestions={classic:['시작 버튼이 작동하지 않아요','누르면 상승하지 않아요','손을 떼어도 내려오지 않아요','공중에서 다시 누르면 반응하지 않아요','돌기둥이 생성되거나 이동하지 않아요','돌기둥 틈이 너무 좁거나 높이가 같아요','돌기둥에 닿아도 끝나지 않아요','바닥에 닿아도 끝나지 않아요','통과당 정확히 1점이 아니에요','재시작해도 초기화되지 않아요','게임 화면이 잘려요'],coin:['시작·상승·중력 조작이 이상해요','돌기둥이 남아 있어요','코인이 나타나지 않거나 먹어도 남아요','코인 하나가 정확히 1점이 아니에요','작은 검은 구름에 닿아도 끝나지 않아요','바닥에 닿아도 끝나지 않아요','재시작하면 점수·코인·구름이 초기화되지 않아요'],image:['이미지 URL의 그림이 안 보여요','주인공이 두 마리 동시에 보여요','방향이 뒤집히거나 몸 위치가 튀어요','투명해야 할 곳에 흰 상자가 보여요','그림 크기가 맞지 않아요','아이템이 사라지지 않거나 정확히 1점이 아니에요','장애물이 안 보이거나 충돌하지 않아요']};
 function buildErrors(box,slide){
  const root=box.parentElement;
- const st=state.errorChecks[slide.id] ||= {selected:{},details:{},free:''},list=el('div','error-list'),count=el('div','error-count'),status=el('div','inline-status');let noProblems,submit;
+ const st=state.errorChecks[slide.id] ||= {selected:{},details:{},free:''},list=el('div','error-list'),count=el('div','error-count'),status=el('div','inline-status'),createGame=gameCreationAction();let noProblems,submit;
  const selected=()=>errorQuestions[slide.kind].flatMap((q,i)=>st.selected[i]||st.details[i]?.trim()?[q+(st.details[i]?.trim()?': '+st.details[i].trim():'')]:[]).concat(st.free.trim()?[st.free.trim()]:[]);
- const update=()=>{const n=selected().length;count.textContent='선택한 오류 '+n+'개';if(noProblems)noProblems.disabled=n>0;if(submit)submit.disabled=n===0;if(noProblems&&submit)setSlidePrimary(root,n>0?submit:noProblems);save();};
+ const update=()=>{const n=selected().length;count.textContent='선택한 오류 '+n+'개';if(noProblems)noProblems.disabled=n>0;if(submit)submit.disabled=n===0;if(noProblems&&submit)setSlidePrimary(root,!state.gameHTML?createGame:n>0?submit:noProblems);save();};
  errorQuestions[slide.kind].forEach((q,i)=>{const row=el('div','error-row'),b=action(q,()=>{st.selected[i]=!st.selected[i];b.classList.toggle('selected',st.selected[i]);b.setAttribute('aria-pressed',String(!!st.selected[i]));update();}),input=el('textarea');b.classList.toggle('selected',!!st.selected[i]);b.setAttribute('aria-pressed',String(!!st.selected[i]));input.rows=2;input.maxLength=500;input.placeholder='다른 오류 직접 적기';input.setAttribute('aria-label',q+' 직접 입력');input.value=st.details[i]||'';input.oninput=()=>{st.details[i]=input.value;update();};row.append(b,input);list.append(row);});
  const free=el('textarea');free.maxLength=1000;free.placeholder='자유롭게 적어 주세요';free.setAttribute('aria-label','자유 입력');free.value=st.free;free.oninput=()=>{st.free=free.value;update();};list.append(free);
- const bar=el('div','actions');noProblems=action('문제가 없어요',()=>go(state.page+1));submit=action('프롬프트로 바꾸기',async()=>{const issues=selected();if(!issues.length||controller)return;const nextPage=state.page+1;submit.disabled=true;list.querySelectorAll('button,textarea').forEach(x=>x.disabled=true);try{const source='현재 HTML에서 다음 요청을 반영해 줘. 오류는 고치고 모습 변경 요청은 뜻대로 적용해 줘.\n'+issues.join('\n')+'\n요청하지 않은 규칙과 기존 이미지 URL은 유지하고 전체 HTML을 html 코드블록 하나로 출력해 줘.';const prompt=await convertPrompt('errors-'+slide.id,source,status);if(box.closest('.slide')!==root||$('slide-content').firstElementChild!==root)return;editCurrentGame(prompt,nextPage,true,value=>{state.promptConversions['errors-'+slide.id].prompt=value;save();});}catch(e){setStatus(status,e.message,true);}finally{list.querySelectorAll('button,textarea').forEach(x=>x.disabled=false);update();}},true);noProblems.dataset.stepAction='true';submit.dataset.stepAction='true';bar.append(noProblems,submit);update();box.append(count,list,status,bar);
+ const bar=el('div','actions');noProblems=action('문제가 없어요',()=>go(state.page+1));submit=action('프롬프트로 바꾸기',async()=>{const issues=selected();if(!issues.length||controller)return;const nextPage=state.page+1;submit.disabled=true;list.querySelectorAll('button,textarea').forEach(x=>x.disabled=true);try{const source='현재 HTML에서 다음 요청을 반영해 줘. 오류는 고치고 모습 변경 요청은 뜻대로 적용해 줘.\n'+issues.join('\n')+'\n요청하지 않은 규칙과 기존 이미지 URL은 유지하고 전체 HTML을 html 코드블록 하나로 출력해 줘.';const prompt=await convertPrompt('errors-'+slide.id,source,status);if(box.closest('.slide')!==root||$('slide-content').firstElementChild!==root)return;editCurrentGame(prompt,nextPage,true,value=>{state.promptConversions['errors-'+slide.id].prompt=value;save();});}catch(e){setStatus(status,e.message,true);}finally{list.querySelectorAll('button,textarea').forEach(x=>x.disabled=false);update();}},true);for(const button of [noProblems,submit,createGame])button.dataset.stepAction='true';bar.append(noProblems,submit,createGame);update();box.append(count,list,status,bar);
 }

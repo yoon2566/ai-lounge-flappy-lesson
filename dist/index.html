@@ -107,6 +107,7 @@
 .slide-wrap.has-slide-next .intro-reference-crop{--picture-height:min(334px,calc(436px - var(--next-space-bottom,112px)));width:calc(var(--picture-height) * .61078);height:var(--picture-height)}
 .slide-wrap.has-slide-next .intro-bridge{right:var(--next-space-right,292px);font-size:24px;line-height:1.4}
 .slide-action>.slide-next:disabled{background:#d8dcd7;border-color:#d8dcd7;color:#637065;opacity:1;cursor:default;box-shadow:none}
+@media(max-width:650px){.prompt-dialog-footer .game-create-action,.lesson-dialog .actions .game-create-action{font-size:16px;padding:10px 12px}.lesson-dialog .actions:has(.game-create-action){gap:8px}}
 .lesson-dialog.background-editor{width:min(900px,94vw);height:min(800px,90dvh);gap:8px}.background-editor .erase-wrap{flex:1;min-height:100px;display:flex;align-items:center;justify-content:center;overflow:hidden}.background-editor .erase-canvas{max-width:100%;max-height:100%;object-fit:contain;touch-action:none;cursor:crosshair}.background-editor .erase-size{display:flex;align-items:center;gap:6px;font-size:16px}.background-editor .erase-size input{width:100px}.background-editor .actions{gap:6px}.background-editor .actions button{font-size:16px;padding:8px 11px}
 </style></head><body>
 <main class="stage" id="lesson-stage" tabindex="-1" aria-label="원버튼 아케이드 이미지 수업 슬라이드"><article class="slide-wrap" id="slide-wrap" aria-label="슬라이드"><div id="slide-content"></div><div id="slide-action" class="slide-action"></div></article></main>
@@ -197,7 +198,7 @@ function gameDialog(html,title,mode,allowHistory=false){
  requestAnimationFrame(fitGame);
 }
 function pendingImageStage(){for(const kind of ['background','sprite','item','obstacle']){if(!assetSrc(kind,kind!=='background'))return pageOf(kind==='sprite'?'remove':kind);if(!state.urls[kind])return pageOf('remove');if(state.gameHTML&&!state.gameHTML.includes(state.urls[kind]))return pageOf(kind==='background'?'apply-bg':'apply-'+kind);}return null;}
-function myGame(){if(state.gameHTML)gameDialog(state.gameHTML,'내가 만든 게임',null,true);else promptDialog('먼저 기본 게임을 만들어 주세요','모은 문장을 프롬프트로 바꿔 기본 게임을 만들거나, 기존에 만든 HTML을 불러와 주세요.');}
+function myGame(){if(state.gameHTML)gameDialog(state.gameHTML,'내가 만든 게임',null,true);else{const d=dialog('먼저 기본 게임을 만들어 주세요'),bar=el('div','actions');bar.append(action('닫기',()=>closeDialog(d)),gameCreationAction(()=>{closeDialog(d);goToGameCreation();}));d.append(bar);}}
 function getGame(){const input=el('input');input.type='file';input.accept='.html,text/html';input.onchange=async()=>{if(!input.files[0])return;const html=await input.files[0].text();input.remove();if(!/<html[\s>]/i.test(html)||!/<script[\s>]/i.test(html)){flash('실행할 수 있는 게임 HTML을 선택해 주세요.');return;}rememberGame(html);render();};input.style.display='none';document.body.append(input);input.addEventListener('cancel',()=>input.remove(),{once:true});input.click();}
 // Keep only game HTML here: restoring a game must not roll back prepared images.
 const GAME_HISTORY_LIMIT=3;
@@ -400,14 +401,15 @@ function generatedPreview(html,token){
 function downloadGameHtml(html,name='내가_만든_플래피게임.html'){
   if(!html)return;const url=URL.createObjectURL(new Blob(['\ufeff',html],{type:'text/html;charset=utf-8'})),link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-function openPromptDialog({value,applyLabel='게임 만들기',onInput,onApply,onStop,onClose,returnFocus}){
+function openPromptDialog({value,applyLabel='게임 만들기',requiresValue=true,instructionText='문장을 확인하거나 고친 뒤, 아래 실행 버튼을 눌러 주세요.',onInput,onApply,onStop,onClose,returnFocus}){
   const element=document.createElement('dialog');element.className='prompt-dialog';element.setAttribute('aria-label','적용할 프롬프트');
-  const heading=node('prompt-dialog-heading','적용할 프롬프트'),instruction=node('prompt-dialog-instruction','문장을 확인하거나 고친 뒤, 아래 실행 버튼을 눌러 주세요.'),input=document.createElement('textarea');
+  const heading=node('prompt-dialog-heading','적용할 프롬프트'),instruction=node('prompt-dialog-instruction',instructionText),input=document.createElement('textarea');
   input.className='prompt-dialog-input';input.setAttribute('aria-label','적용할 프롬프트');input.maxLength=16000;input.value=value||'';input.spellcheck=false;
+  const canApply=()=>!requiresValue||Boolean(input.value.trim());
   const status=node('prompt-dialog-status');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
   const footer=node('prompt-dialog-footer');let busy=false,closed=false,phase='prompt',resultHtml='',removeFrameListener=null;
   function close(notify=true){if(closed)return;closed=true;removeFrameListener?.();element.close();element.remove();if(notify)onClose?.(phase);if(returnFocus?.isConnected)returnFocus.focus({preventScroll:true})}
-  function showPrompt(){if(phase==='prompt')return;removeFrameListener?.();removeFrameListener=null;phase='prompt';busy=false;resultHtml='';element.className='prompt-dialog';element.setAttribute('aria-label','적용할 프롬프트');element.replaceChildren(heading,instruction,input,status,footer);input.disabled=false;dismiss.disabled=false;stop.hidden=true;apply.disabled=!input.value.trim();apply.textContent=applyLabel;status.textContent='';input.focus({preventScroll:true})}
+  function showPrompt(){if(phase==='prompt')return;removeFrameListener?.();removeFrameListener=null;phase='prompt';busy=false;resultHtml='';element.className='prompt-dialog';element.setAttribute('aria-label','적용할 프롬프트');element.replaceChildren(heading,instruction,input,status,footer);input.disabled=false;dismiss.disabled=false;stop.hidden=true;apply.disabled=!canApply();apply.textContent=applyLabel;status.textContent='';input.focus({preventScroll:true})}
   function showGame({html,title='완성된 게임',onEdit,onNext,previewOnly=false,notice=''}){
     if(phase==='result'&&resultHtml===html)return;removeFrameListener?.();phase='result';busy=false;resultHtml=html;element.className='prompt-dialog prompt-game-result';element.setAttribute('aria-label',title);element.setAttribute('aria-busy','false');
     const resultHeading=node('error-result-heading',title),frame=document.createElement('iframe'),token=crypto.randomUUID();frame.className='error-game-frame';frame.title='완성된 내 게임';frame.setAttribute('sandbox','allow-scripts allow-pointer-lock');frame.referrerPolicy='no-referrer';frame.srcdoc=generatedPreview(html,token);frame.addEventListener('load',()=>{if(frame.isConnected)frame.focus({preventScroll:true})});
@@ -418,22 +420,31 @@ function openPromptDialog({value,applyLabel='게임 만들기',onInput,onApply,o
     if(!previewOnly)buttons.append(quizButton('다음 단계',()=>onNext?.(),true));bar.append(hint,buttons);element.replaceChildren(resultHeading,frame,bar);
     const errorListener=event=>{if(event.source===frame.contentWindow&&event.data?.type==='sherpa-game-error'&&event.data.token===token)hint.textContent='게임 실행 오류: '+String(event.data.message).slice(0,200)};window.addEventListener('message',errorListener);removeFrameListener=()=>window.removeEventListener('message',errorListener);
   }
-  const dismiss=quizButton('닫기',()=>{if(!busy)close()}),stop=quizButton('중지',()=>onStop?.()),apply=quizButton(applyLabel,()=>{if(!busy&&input.value.trim())return onApply?.(input.value)},true);
-  stop.hidden=true;apply.disabled=!input.value.trim();input.oninput=()=>{onInput?.(input.value);apply.disabled=busy||!input.value.trim()};
+  const dismiss=quizButton('닫기',()=>{if(!busy)close()}),stop=quizButton('중지',()=>onStop?.()),apply=quizButton(applyLabel,()=>{if(!busy&&canApply())return onApply?.(input.value)},true);
+  stop.hidden=true;apply.disabled=!canApply();input.oninput=()=>{onInput?.(input.value);apply.disabled=busy||!canApply()};
   input.addEventListener('keydown',event=>event.stopPropagation());input.addEventListener('keyup',event=>event.stopPropagation());
   footer.append(dismiss,stop,apply);element.append(heading,instruction,input,status,footer);
   element.addEventListener('cancel',event=>{event.preventDefault();if(!busy)close()});document.body.append(element);element.showModal();input.focus({preventScroll:true});
-  return {element,input,status,apply,close,showPrompt,showGame,get phase(){return phase},update({value,busy:nextBusy=false,message=''}){busy=nextBusy;if(value!==undefined&&input.value!==value)input.value=value;input.disabled=busy;dismiss.disabled=busy;stop.hidden=!busy;apply.disabled=busy||!input.value.trim();apply.textContent=busy?(applyLabel==='게임 만들기'?'게임 만드는 중…':'적용 중…'):applyLabel;status.textContent=message;element.setAttribute('aria-busy',String(busy))}};
+  return {element,input,status,apply,close,showPrompt,showGame,get phase(){return phase},update({value,busy:nextBusy=false,message=''}){busy=nextBusy;if(value!==undefined&&input.value!==value)input.value=value;input.disabled=busy;dismiss.disabled=busy;stop.hidden=!busy;apply.disabled=busy||!canApply();apply.textContent=busy?(applyLabel==='게임 만들기'?'게임 만드는 중…':'적용 중…'):applyLabel;status.textContent=message;element.setAttribute('aria-busy',String(busy))}};
 }
 
 return openPromptDialog;
 })();
 
+function goToGameCreation(){
+ const st=state.activities.observe ||= {index:0,answers:{},sentences:{},review:false};
+ st.answers ||= {};st.sentences ||= {};
+ const unfinished=data.questions.findIndex((question,i)=>st.answers[i]!==question.answer);
+ st.review=unfinished===-1;st.index=unfinished===-1?data.questions.length-1:unfinished;
+ save();go(pageOf('observe'));
+}
+function gameCreationAction(onClick=goToGameCreation){const button=action('기본 게임 만들러 가기',onClick,true);button.classList.add('game-create-action');return button;}
 function editCurrentGame(prompt,nextPage,existing=true,onInput){
- let popup;popup=openLessonPromptDialog({value:prompt,applyLabel:existing?'수정·재실행':'게임 만들기',onInput,onStop:()=>controller?.abort(),onApply:async text=>{
- if(controller)return;if(existing&&!state.gameHTML){popup.update({message:'수정할 게임을 먼저 만들거나 HTML을 불러와 주세요.'});return;}popup.update({busy:true,message:'게임을 만들고 있어요…'});
+ const missingGame=existing&&!state.gameHTML;
+ let popup;popup=openLessonPromptDialog({value:prompt,applyLabel:missingGame?'기본 게임 만들러 가기':existing?'수정·재실행':'게임 만들기',requiresValue:!missingGame,instructionText:missingGame?'기본 게임을 만든 뒤 이 프롬프트를 적용할 수 있어요.':undefined,onInput,onStop:()=>controller?.abort(),onApply:async text=>{
+ if(existing&&!state.gameHTML){onInput?.(text);popup.close();goToGameCreation();return;}if(controller)return;popup.update({busy:true,message:'게임을 만들고 있어요…'});
  try{const html=await apiGame(text,popup.status,existing?state.gameHTML:'');existing=true;popup.showGame({html,onNext:()=>{popup.close();go(nextPage);}});}catch(e){popup.update({message:e.name==='AbortError'?'중지했습니다. 다시 시도할 수 있어요.':e.message});}
- }});return popup;
+ }});if(missingGame){popup.apply.classList.add('game-create-action');popup.update({message:'먼저 기본 게임을 만들어 주세요.'});}return popup;
 }
 function buildActivity(box,slide){
  const root=box.parentElement;
@@ -453,12 +464,12 @@ function buildActivity(box,slide){
 const errorQuestions={classic:['시작 버튼이 작동하지 않아요','누르면 상승하지 않아요','손을 떼어도 내려오지 않아요','공중에서 다시 누르면 반응하지 않아요','돌기둥이 생성되거나 이동하지 않아요','돌기둥 틈이 너무 좁거나 높이가 같아요','돌기둥에 닿아도 끝나지 않아요','바닥에 닿아도 끝나지 않아요','통과당 정확히 1점이 아니에요','재시작해도 초기화되지 않아요','게임 화면이 잘려요'],coin:['시작·상승·중력 조작이 이상해요','돌기둥이 남아 있어요','코인이 나타나지 않거나 먹어도 남아요','코인 하나가 정확히 1점이 아니에요','작은 검은 구름에 닿아도 끝나지 않아요','바닥에 닿아도 끝나지 않아요','재시작하면 점수·코인·구름이 초기화되지 않아요'],image:['이미지 URL의 그림이 안 보여요','주인공이 두 마리 동시에 보여요','방향이 뒤집히거나 몸 위치가 튀어요','투명해야 할 곳에 흰 상자가 보여요','그림 크기가 맞지 않아요','아이템이 사라지지 않거나 정확히 1점이 아니에요','장애물이 안 보이거나 충돌하지 않아요']};
 function buildErrors(box,slide){
  const root=box.parentElement;
- const st=state.errorChecks[slide.id] ||= {selected:{},details:{},free:''},list=el('div','error-list'),count=el('div','error-count'),status=el('div','inline-status');let noProblems,submit;
+ const st=state.errorChecks[slide.id] ||= {selected:{},details:{},free:''},list=el('div','error-list'),count=el('div','error-count'),status=el('div','inline-status'),createGame=gameCreationAction();let noProblems,submit;
  const selected=()=>errorQuestions[slide.kind].flatMap((q,i)=>st.selected[i]||st.details[i]?.trim()?[q+(st.details[i]?.trim()?': '+st.details[i].trim():'')]:[]).concat(st.free.trim()?[st.free.trim()]:[]);
- const update=()=>{const n=selected().length;count.textContent='선택한 오류 '+n+'개';if(noProblems)noProblems.disabled=n>0;if(submit)submit.disabled=n===0;if(noProblems&&submit)setSlidePrimary(root,n>0?submit:noProblems);save();};
+ const update=()=>{const n=selected().length;count.textContent='선택한 오류 '+n+'개';if(noProblems)noProblems.disabled=n>0;if(submit)submit.disabled=n===0;if(noProblems&&submit)setSlidePrimary(root,!state.gameHTML?createGame:n>0?submit:noProblems);save();};
  errorQuestions[slide.kind].forEach((q,i)=>{const row=el('div','error-row'),b=action(q,()=>{st.selected[i]=!st.selected[i];b.classList.toggle('selected',st.selected[i]);b.setAttribute('aria-pressed',String(!!st.selected[i]));update();}),input=el('textarea');b.classList.toggle('selected',!!st.selected[i]);b.setAttribute('aria-pressed',String(!!st.selected[i]));input.rows=2;input.maxLength=500;input.placeholder='다른 오류 직접 적기';input.setAttribute('aria-label',q+' 직접 입력');input.value=st.details[i]||'';input.oninput=()=>{st.details[i]=input.value;update();};row.append(b,input);list.append(row);});
  const free=el('textarea');free.maxLength=1000;free.placeholder='자유롭게 적어 주세요';free.setAttribute('aria-label','자유 입력');free.value=st.free;free.oninput=()=>{st.free=free.value;update();};list.append(free);
- const bar=el('div','actions');noProblems=action('문제가 없어요',()=>go(state.page+1));submit=action('프롬프트로 바꾸기',async()=>{const issues=selected();if(!issues.length||controller)return;const nextPage=state.page+1;submit.disabled=true;list.querySelectorAll('button,textarea').forEach(x=>x.disabled=true);try{const source='현재 HTML에서 다음 요청을 반영해 줘. 오류는 고치고 모습 변경 요청은 뜻대로 적용해 줘.\n'+issues.join('\n')+'\n요청하지 않은 규칙과 기존 이미지 URL은 유지하고 전체 HTML을 html 코드블록 하나로 출력해 줘.';const prompt=await convertPrompt('errors-'+slide.id,source,status);if(box.closest('.slide')!==root||$('slide-content').firstElementChild!==root)return;editCurrentGame(prompt,nextPage,true,value=>{state.promptConversions['errors-'+slide.id].prompt=value;save();});}catch(e){setStatus(status,e.message,true);}finally{list.querySelectorAll('button,textarea').forEach(x=>x.disabled=false);update();}},true);noProblems.dataset.stepAction='true';submit.dataset.stepAction='true';bar.append(noProblems,submit);update();box.append(count,list,status,bar);
+ const bar=el('div','actions');noProblems=action('문제가 없어요',()=>go(state.page+1));submit=action('프롬프트로 바꾸기',async()=>{const issues=selected();if(!issues.length||controller)return;const nextPage=state.page+1;submit.disabled=true;list.querySelectorAll('button,textarea').forEach(x=>x.disabled=true);try{const source='현재 HTML에서 다음 요청을 반영해 줘. 오류는 고치고 모습 변경 요청은 뜻대로 적용해 줘.\n'+issues.join('\n')+'\n요청하지 않은 규칙과 기존 이미지 URL은 유지하고 전체 HTML을 html 코드블록 하나로 출력해 줘.';const prompt=await convertPrompt('errors-'+slide.id,source,status);if(box.closest('.slide')!==root||$('slide-content').firstElementChild!==root)return;editCurrentGame(prompt,nextPage,true,value=>{state.promptConversions['errors-'+slide.id].prompt=value;save();});}catch(e){setStatus(status,e.message,true);}finally{list.querySelectorAll('button,textarea').forEach(x=>x.disabled=false);update();}},true);for(const button of [noProblems,submit,createGame])button.dataset.stepAction='true';bar.append(noProblems,submit,createGame);update();box.append(count,list,status,bar);
 }
 
 const imageKinds=['background','sprite','item','obstacle'];
@@ -548,12 +559,14 @@ function buildEnhancedSlide(root,slide){
   const status=el('div','inline-status'),bar=el('div','actions flow-footer');bar.append(action('동작 요청 수정하기',()=>editImage('character')));const next=action('확인하고 다음 단계',async()=>{next.disabled=true;try{if(dirty&&preview){asset.normalized=base;asset.adjustments=settings;asset.clean=preview.toDataURL('image/webp',1);asset.width=512;asset.height=256;invalidateAssetURL('sprite');save();}setStatus(status,'주인공 그림을 준비하고 있어요…');await ensureHosted('sprite',asset.clean);if(isCurrent())go(nextPage);}catch(e){setStatus(status,e.message,true);next.disabled=false;}},true);bar.append(next);box.append(status,bar);setSlidePrimary(root,next);return true;
  }
  if(slide.type==='apply'){
+  if(!state.gameHTML){const create=gameCreationAction();box.append(el('p','muted','먼저 기본 게임을 만들어 주세요.'),create);setSlidePrimary(root,create);return true;}
   const kind=slide.kind,src=assetSrc(kind,kind!=='background'),grid=el('div','apply-layout'),pic=el('div','studio-picture checkered'),detail=el('div');if(src)pic.append(image(src,'적용할 '+LABEL[kind]));else pic.append(el('p','muted','그림 준비가 필요해요'));detail.append(el('h3','','내 '+LABEL[kind]+' 그림'),el('p','muted',kind==='obstacle'?'닿으면 끝나는 장애물입니다.':kind==='item'?'모으면 1점씩 오르는 물건입니다.':kind==='sprite'?'가로 두 칸을 번갈아 보여 줍니다.':'게임 화면에 반복해서 보여 줍니다.'));const status=el('div','inline-status'),details=el('details'),summary=el('summary','','이미지 주소 확인'),url=el('input','url-input');url.readOnly=true;url.setAttribute('aria-label',LABEL[kind]+' 이미지 주소');details.append(summary,url);detail.append(details,action('그림 수정하기',()=>editImage(kind==='sprite'?'character':kind),false,true));grid.append(pic,detail);box.append(grid,status);const bar=el('div','actions flow-footer');let ready=false;
   const run=action('프롬프트로 바꾸기',async()=>{if(!ready||controller)return;run.disabled=true;try{const text=await convertPrompt('apply-'+kind,applyPrompt(kind,state.urls[kind]),status);if(!isCurrent())return;editCurrentGame(text,nextPage);}catch(e){setStatus(status,e.message,true);}finally{run.disabled=false;}},true);run.disabled=true;bar.append(action('현재 게임 보기',myGame),run);let primary=run;if(state.gameHTML&&state.urls[kind]&&state.gameHTML.includes(state.urls[kind])){run.textContent='수정하기';primary=action('다음 단계',()=>go(nextPage),true);bar.append(primary);}box.append(bar);setSlidePrimary(root,primary);
   async function prepare(){if(!isCurrent())return;try{if(!src)throw Error('먼저 배경 제거 단계에서 그림을 준비해 주세요.');setStatus(status,'그림을 준비하고 있어요…');const hosted=await ensureHosted(kind,src);if(!isCurrent())return;url.value=hosted;ready=true;run.disabled=false;setStatus(status,'그림 준비 완료. 프롬프트를 확인한 뒤 적용하세요.');}catch(e){if(!isCurrent())return;setStatus(status,e.message,true);const prepareButton=action('준비 단계로',()=>go(pageOf('remove')),true);detail.append(prepareButton);setSlidePrimary(root,prepareButton);}}queueMicrotask(prepare);return true;
  }
  if(slide.type==='share'){
-  const form=el('div','share-form'),author=el('input'),title=el('input');author.maxLength=40;title.maxLength=80;author.setAttribute('aria-label','이름 또는 닉네임');title.setAttribute('aria-label','작품 제목');author.placeholder='이름 또는 닉네임';title.placeholder='작품 제목';state.sharing ||= {};author.value=state.sharing.author||'';title.value=state.sharing.title||'';for(const[input,key]of[[author,'author'],[title,'title']])input.oninput=()=>{state.sharing[key]=input.value;save();};form.append(el('label','','이름 또는 닉네임'),author,el('label','','작품 제목'),title,el('p','muted','지금 게임 그대로 게시합니다. 새 그림을 모두 적용하지 않아도 돼요. 게시한 작품과 닉네임은 다른 사람이 볼 수 있어요.'));const status=el('div','inline-status'),bar=el('div','actions flow-footer');
+  const form=el('div','share-form'),author=el('input'),title=el('input');author.maxLength=40;title.maxLength=80;author.setAttribute('aria-label','이름 또는 닉네임');title.setAttribute('aria-label','작품 제목');author.placeholder='이름 또는 닉네임';title.placeholder='작품 제목';state.sharing ||= {};author.value=state.sharing.author||'';title.value=state.sharing.title||'';for(const[input,key]of[[author,'author'],[title,'title']])input.oninput=()=>{state.sharing[key]=input.value;save();};form.append(el('label','','이름 또는 닉네임'),author,el('label','','작품 제목'),title,el('p','muted',state.gameHTML?'지금 게임 그대로 게시합니다. 새 그림을 모두 적용하지 않아도 돼요. 게시한 작품과 닉네임은 다른 사람이 볼 수 있어요.':'먼저 기본 게임을 만들어 주세요. 입력한 닉네임과 작품 제목은 그대로 유지됩니다.'));const status=el('div','inline-status'),bar=el('div','actions flow-footer');
+  if(!state.gameHTML){const create=gameCreationAction();bar.append(action('게시판 열기',()=>window.open(HOST+'/board.html','_blank','noopener')),create);box.append(form,status,bar);setSlidePrimary(root,create);return true;}
   const publish=action('게시하기',async()=>{if(!author.value.trim()||!title.value.trim()){setStatus(status,'닉네임과 작품 제목을 적어 주세요.');return;}if(!state.gameHTML){setStatus(status,'먼저 게임을 만들어 주세요.');return;}publish.disabled=true;author.disabled=title.disabled=true;try{setStatus(status,'게시하고 있어요…');const response=await fetch('/api/board',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({author:author.value,title:title.value,html:state.gameHTML})}),out=await response.json();if(!response.ok)throw Error(out.error||'게시하지 못했습니다.');state.sharing.lastId=out.item.id;save();setStatus(status,out.duplicate?'이미 게시한 작품이에요. 게시판에서 확인하세요.':'게시했습니다. 게시판에서 친구들과 함께 해 보세요.');}catch(e){setStatus(status,e.message,true);}finally{publish.disabled=false;author.disabled=title.disabled=false;}},true);
   bar.append(action('HTML 다운로드',()=>{if(!state.gameHTML){setStatus(status,'먼저 게임을 만들어 주세요.');return;}download('내가_만든_플래피게임.html',new Blob([state.gameHTML],{type:'text/html;charset=utf-8'}));}),action('게시판 열기',()=>window.open(HOST+'/board.html','_blank','noopener')),publish);box.append(form,status,bar);setSlidePrimary(root,publish);return true;
  }
@@ -567,12 +580,12 @@ function buildSlide(slide){
  if(slide.type==='goals'){const list=el('div','goals-list');slide.goals.forEach((text,i)=>{const row=el('div','goal-row');row.append(el('div','goal-number',String(i+1).padStart(2,'0')),el('div','editable goal-text',text));list.append(row);});root.append(list);return root;}
  if(slide.type==='explanation'){root.append(el('div','editable explanation-body',slide.body));const flow=el('div','flow');slide.flow.forEach((word,i)=>{if(i)flow.append(el('div','flow-arrow','→'));flow.append(el('div','flow-word',word));});root.append(el('div','flow-line'),flow);return root;}
  if(slide.type==='play'){
- makeLead(root,slide.mode==='final'&&pendingImageStage()!==null?'현재 게임입니다. 원하면 새 이미지를 추가로 적용할 수 있어요.':slide.caption);const frame=el('iframe','play-frame');frame.title=slide.mode==='classic'?'별빛 비행 — 부엉이 게임':slide.mode==='practice'?'코인 모으기 게임':'학생의 최신 게임';frame.setAttribute('sandbox','allow-scripts');
- const doc=slide.mode==='final'?(state.gameHTML||'<!doctype html><html lang="ko"><body><p>먼저 게임을 만들거나 HTML을 불러와 주세요.</p></body></html>'):data.sourceGames[slide.mode];frame.srcdoc=doc;if(slide.mode!=='final')frame.classList.add('source-game-frame');currentFrame=frame;root.append(frame);
+ makeLead(root,slide.mode==='final'&&!state.gameHTML?'기본 게임을 만든 뒤 이곳에서 확인할 수 있어요.':slide.mode==='final'&&pendingImageStage()!==null?'현재 게임입니다. 원하면 새 이미지를 추가로 적용할 수 있어요.':slide.caption);const frame=el('iframe','play-frame');frame.title=slide.mode==='classic'?'별빛 비행 — 부엉이 게임':slide.mode==='practice'?'코인 모으기 게임':'학생의 최신 게임';frame.setAttribute('sandbox','allow-scripts');
+ const doc=slide.mode==='final'?(state.gameHTML||'<!doctype html><html lang="ko"><body><p>먼저 기본 게임을 만들어 주세요.</p></body></html>'):data.sourceGames[slide.mode];frame.srcdoc=doc;if(slide.mode!=='final')frame.classList.add('source-game-frame');currentFrame=frame;root.append(frame);
  const bar=el('div','play-buttons');if(slide.mode==='classic')registerRankFrame(frame);
- bar.append(action('크게 보기',()=>gameDialog(doc,frame.title,null,slide.mode==='final'),false,true));
+ if(slide.mode!=='final'||state.gameHTML)bar.append(action('크게 보기',()=>gameDialog(doc,frame.title,null,slide.mode==='final'),false,true));
  if(slide.mode==='practice')bar.append(setSlidePrimary(root,action('다음 단계',()=>go(pageOf('coin-observe')),true)));
- if(slide.mode==='final'){if(pendingImageStage()!==null)bar.append(action('새 이미지 적용하기',()=>go(pendingImageStage()),true,true));bar.append(action('내 게임 보기',myGame,false,true),setSlidePrimary(root,action('오류 확인하기 →',()=>go(pageOf('repair')),true)));}root.append(bar);return root;}
+ if(slide.mode==='final'){if(state.gameHTML){if(pendingImageStage()!==null)bar.append(action('새 이미지 적용하기',()=>go(pendingImageStage()),true,true));bar.append(action('내 게임 보기',myGame,false,true),setSlidePrimary(root,action('오류 확인하기 →',()=>go(pageOf('repair')),true)));}else bar.append(setSlidePrimary(root,gameCreationAction()));}root.append(bar);return root;}
 
  if(slide.type==='intro'){
   makeLead(root,slide.body);

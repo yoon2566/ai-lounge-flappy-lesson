@@ -70,7 +70,7 @@ function gameDialog(html,title,mode,allowHistory=false){
  requestAnimationFrame(fitGame);
 }
 function pendingImageStage(){for(const kind of ['background','sprite','item','obstacle']){if(!assetSrc(kind,kind!=='background'))return pageOf(kind==='sprite'?'remove':kind);if(!state.urls[kind])return pageOf('remove');if(state.gameHTML&&!state.gameHTML.includes(state.urls[kind]))return pageOf(kind==='background'?'apply-bg':'apply-'+kind);}return null;}
-function myGame(){if(state.gameHTML)gameDialog(state.gameHTML,'내가 만든 게임',null,true);else promptDialog('먼저 기본 게임을 만들어 주세요','모은 문장을 프롬프트로 바꿔 기본 게임을 만들거나, 기존에 만든 HTML을 불러와 주세요.');}
+function myGame(){if(state.gameHTML)gameDialog(state.gameHTML,'내가 만든 게임',null,true);else{const d=dialog('먼저 기본 게임을 만들어 주세요'),bar=el('div','actions');bar.append(action('닫기',()=>closeDialog(d)),gameCreationAction(()=>{closeDialog(d);goToGameCreation();}));d.append(bar);}}
 function getGame(){const input=el('input');input.type='file';input.accept='.html,text/html';input.onchange=async()=>{if(!input.files[0])return;const html=await input.files[0].text();input.remove();if(!/<html[\s>]/i.test(html)||!/<script[\s>]/i.test(html)){flash('실행할 수 있는 게임 HTML을 선택해 주세요.');return;}rememberGame(html);render();};input.style.display='none';document.body.append(input);input.addEventListener('cancel',()=>input.remove(),{once:true});input.click();}
 /* GAME_HISTORY */
 async function apiImage(prompt,status){
@@ -166,12 +166,12 @@ function buildSlide(slide){
  if(slide.type==='goals'){const list=el('div','goals-list');slide.goals.forEach((text,i)=>{const row=el('div','goal-row');row.append(el('div','goal-number',String(i+1).padStart(2,'0')),el('div','editable goal-text',text));list.append(row);});root.append(list);return root;}
  if(slide.type==='explanation'){root.append(el('div','editable explanation-body',slide.body));const flow=el('div','flow');slide.flow.forEach((word,i)=>{if(i)flow.append(el('div','flow-arrow','→'));flow.append(el('div','flow-word',word));});root.append(el('div','flow-line'),flow);return root;}
  if(slide.type==='play'){
- makeLead(root,slide.mode==='final'&&pendingImageStage()!==null?'현재 게임입니다. 원하면 새 이미지를 추가로 적용할 수 있어요.':slide.caption);const frame=el('iframe','play-frame');frame.title=slide.mode==='classic'?'별빛 비행 — 부엉이 게임':slide.mode==='practice'?'코인 모으기 게임':'학생의 최신 게임';frame.setAttribute('sandbox','allow-scripts');
- const doc=slide.mode==='final'?(state.gameHTML||'<!doctype html><html lang="ko"><body><p>먼저 게임을 만들거나 HTML을 불러와 주세요.</p></body></html>'):data.sourceGames[slide.mode];frame.srcdoc=doc;if(slide.mode!=='final')frame.classList.add('source-game-frame');currentFrame=frame;root.append(frame);
+ makeLead(root,slide.mode==='final'&&!state.gameHTML?'기본 게임을 만든 뒤 이곳에서 확인할 수 있어요.':slide.mode==='final'&&pendingImageStage()!==null?'현재 게임입니다. 원하면 새 이미지를 추가로 적용할 수 있어요.':slide.caption);const frame=el('iframe','play-frame');frame.title=slide.mode==='classic'?'별빛 비행 — 부엉이 게임':slide.mode==='practice'?'코인 모으기 게임':'학생의 최신 게임';frame.setAttribute('sandbox','allow-scripts');
+ const doc=slide.mode==='final'?(state.gameHTML||'<!doctype html><html lang="ko"><body><p>먼저 기본 게임을 만들어 주세요.</p></body></html>'):data.sourceGames[slide.mode];frame.srcdoc=doc;if(slide.mode!=='final')frame.classList.add('source-game-frame');currentFrame=frame;root.append(frame);
  const bar=el('div','play-buttons');if(slide.mode==='classic')registerRankFrame(frame);
- bar.append(action('크게 보기',()=>gameDialog(doc,frame.title,null,slide.mode==='final'),false,true));
+ if(slide.mode!=='final'||state.gameHTML)bar.append(action('크게 보기',()=>gameDialog(doc,frame.title,null,slide.mode==='final'),false,true));
  if(slide.mode==='practice')bar.append(setSlidePrimary(root,action('다음 단계',()=>go(pageOf('coin-observe')),true)));
- if(slide.mode==='final'){if(pendingImageStage()!==null)bar.append(action('새 이미지 적용하기',()=>go(pendingImageStage()),true,true));bar.append(action('내 게임 보기',myGame,false,true),setSlidePrimary(root,action('오류 확인하기 →',()=>go(pageOf('repair')),true)));}root.append(bar);return root;}
+ if(slide.mode==='final'){if(state.gameHTML){if(pendingImageStage()!==null)bar.append(action('새 이미지 적용하기',()=>go(pendingImageStage()),true,true));bar.append(action('내 게임 보기',myGame,false,true),setSlidePrimary(root,action('오류 확인하기 →',()=>go(pageOf('repair')),true)));}else bar.append(setSlidePrimary(root,gameCreationAction()));}root.append(bar);return root;}
 
  if(slide.type==='intro'){
   makeLead(root,slide.body);
