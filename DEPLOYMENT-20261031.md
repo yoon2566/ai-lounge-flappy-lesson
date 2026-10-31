@@ -114,3 +114,18 @@
 - `node --check`, `git diff --check`, Wrangler dry run을 통과했다.
 
 검사 코드: `tests/image-runtime.test.cjs`. 설치된 Playwright는 `PLAYWRIGHT_MODULE_PATH`, Chromium은 필요 시 `PLAYWRIGHT_CHROMIUM_EXECUTABLE`로 지정한다. 결과: `evidence/image-runtime-tests.json`, `real-ai-image-check.json`, `image-runtime-deployed-check.json`, `image-runtime-mobile.png`.
+
+## 후속: 부엉이에서 올빼미로 캐릭터 교체
+
+기본·코인 게임의 네 프레임을 귀깃 없는 둥근 머리의 올빼미로 교체했다. 기존 생성 이미지의 머리만 built-in image_gen으로 수정한 뒤 같은 부리 기준 좌표에 등록했다. 272×48 atlas, 프레임 68×48, 출력 34×24, 75ms 주기는 유지한다. WebP 3,754 bytes, PNG 대체 4,421 bytes이며 디코딩한 RGBA가 같다. 이미지 로딩 실패 때 쓰는 Canvas 대체 그림도 귀깃 없이 수정했다.
+
+수업의 소개·관찰 질문·기본 프롬프트·iframe 제목도 올빼미로 맞췄다. 사용자 답안·직접 만든 게임·이미지·게시 작품과 진행 저장 키는 변경하지 않았다. 8896 로컬 prototype도 같은 캐릭터다.
+
+- 활성 배포: `dca24309-b033-403b-8d92-a0fbcea21bdb`
+- 직전 배포: `e94daa42-94ad-4084-97a8-57cb15be9420`
+- index SHA-256: `dc0d55b7254b03a1a210d7fa0eed22cfef5a08d97fc4559179fede6cf65fc1cc`
+- 기존 히트박스 검사 31/31, 수업 통합 검사 17/17, 코인 검사 16/16 통과. prototype는 대체 그림 함수 외 코드가 교체 전과 동일하다.
+- 공개 기본 게임의 준비→상승→종료→재시작, 코인 게임 실행·1점 획득, 수업의 올빼미 표시를 브라우저에서 확인했다. 확인 중 콘솔 오류 0건. 운영 닉네임 등록·점수 저장·AI 생성·게시를 수행하지 않았다.
+- 공개 4HTML은 로컬 dist와 일치한다. Worker 원본·빌드 스크립트·설정·바인딩은 변경하지 않았다.
+
+배포 검증: `evidence/tawny-owl-20261031/before/manifest.json`, `after/manifest.json`. 이미지 생성 원본·변환 스크립트·프롬프트·테스트 결과: `../50_저작권확인/검증_v2/tawny-owl-20261031/`.
