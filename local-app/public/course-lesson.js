@@ -2,8 +2,13 @@
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),code=(params.get('room')||'').toUpperCase(),wantTeacher=params.get('role')==='teacher',pages=[...document.querySelectorAll('[data-page]')],total=pages.length;
 const requestedPage=Number(params.get('page'));
 let page=Number.isInteger(requestedPage)&&requestedPage>=1&&requestedPage<=total?requestedPage:1,openPages=code?[]:Array.from({length:total},(_,i)=>i+1),teacher=false,unavailable=false,polling=false;
+$('room-board').href='/board?room='+encodeURIComponent(code);
 const frames=new Map(),demos=new Map([[4,{id:'demo-classic',url:'/classic-game.html'}],[6,{id:'demo-variant',url:'/variant-game.html'}]]),demoActive=new Set();
 let expanded=null,expandTrigger=null;
+let expandedCodeFrame=null;
+function closeCodeExpanded(){document.body.classList.remove('code-expanded');expandedCodeFrame?.contentWindow.postMessage({channel:'course-preview-close'},location.origin);expandedCodeFrame=null;}
+window.addEventListener('message',e=>{if(e.origin!==location.origin||e.data?.channel!=='course-preview')return;const frame=frames.get(page);if(![5,7].includes(page)||!allowed(page)||!frame||frame.contentWindow!==e.source)return;if(e.data.expanded){expandedCodeFrame=frame;document.body.classList.add('code-expanded');}else closeCodeExpanded();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCodeExpanded();});
 function closeExpanded(){if(!expanded)return;expanded.classList.remove('game-expanded');document.body.classList.remove('game-is-expanded');const b=expanded.querySelector('[data-expand]');b.textContent='⛶ 크게 보기';b.setAttribute('aria-expanded','false');expanded=null;expandTrigger?.focus();}
 for(const b of document.querySelectorAll('[data-expand]')){b.setAttribute('aria-expanded','false');b.onclick=()=>{if(expanded){closeExpanded();return;}expanded=b.closest('section');expandTrigger=b;expanded.classList.add('game-expanded');document.body.classList.add('game-is-expanded');b.textContent='↙ 작게 보기';b.setAttribute('aria-expanded','true');};}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeExpanded();});
@@ -14,6 +19,10 @@ async function request(url,options={}){const r=await fetch(url,{...options,cache
 const allowed=n=>!unavailable&&(teacher||openPages.includes(n));
 function neighboring(d){for(let n=page+d;n>=1&&n<=total;n+=d)if(allowed(n))return n;return null;}
 function render(){const visible=allowed(page);if(!visible||!demos.has(page))closeExpanded();pages.forEach((el,i)=>el.hidden=!(visible&&i+1===page));$('waiting').hidden=visible;$('page-counter').textContent=visible?page+' / '+total:'대기 중';$('previous').disabled=neighboring(-1)===null;$('next').disabled=neighboring(1)===null;
+ document.body.classList.toggle('studio-active',visible&&page===8);
+ document.body.classList.toggle('code-active',visible&&[5,7].includes(page));
+ if(expandedCodeFrame&&(!visible||expandedCodeFrame!==frames.get(page)))closeCodeExpanded();
+ if(!visible||page!==8)closeStudioExpanded();
  document.body.classList.toggle('practice-active',visible&&[5,7,8].includes(page));$('teacher-tools').hidden=!teacher;$('page-lock').textContent=openPages.includes(page)?'현재 페이지 잠그기':'현재 페이지 열기';$('page-lock').setAttribute('aria-pressed',String(openPages.includes(page)));
  for(const [n,demo]of demos){if(visible&&page===n){if(!demoActive.has(n)){$(demo.id).src=demo.url;demoActive.add(n);}}else if(demoActive.has(n)){$(demo.id).src='about:blank';demoActive.delete(n);}}
  if(visible&&[5,7,8].includes(page)&&!frames.has(page)){const n=page,f=document.createElement('iframe');f.id=n===8?'practice':'code-'+(n===5?'classic':'variant');f.title=pages[n-1].getAttribute('aria-label');f.src=n===8?'/practice/index.html?course=1&room='+code:'/course-code.html?kind='+(n===5?'classic':'variant')+'&room='+code;f.onload=()=>f.contentWindow.postMessage({channel:'grade1-classroom',active:allowed(page)&&page===n},location.origin);frames.set(n,f);pages[n-1].append(f);}
@@ -21,6 +30,9 @@ function render(){const visible=allowed(page);if(!visible||!demos.has(page))clos
  document.title=(visible?pages[page-1].getAttribute('aria-label'):'수업 대기')+' · AI 셰르파';
 }
 function move(d){const target=neighboring(d);if(target!==null){page=target;render();}}
+function closeStudioExpanded(){document.body.classList.remove('studio-expanded');$('practice')?.contentWindow.postMessage({channel:'studio-view-close'},location.origin);}
+window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===$('practice')?.contentWindow&&e.data?.channel==='studio-view')document.body.classList.toggle('studio-expanded',page===8&&allowed(8)&&e.data.expanded===true);});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeStudioExpanded();});
 $('previous').onclick=()=>move(-1);$('next').onclick=()=>move(1);
 
 for(const b of document.querySelectorAll('[data-tap]'))b.onclick=()=>{const f=$(demos.get(Number(b.dataset.tap)).id);f.contentWindow.postMessage({channel:'flappy-lesson',command:'tap'},'*');f.focus();};

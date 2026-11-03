@@ -1,0 +1,31 @@
+/* Reserve the available height for the game, including inside the lesson iframe. */
+.studio-page #preview-panel{padding:0;position:relative}
+.studio-page .preview-heading{min-height:44px;padding:6px 12px;gap:8px}
+.studio-page .preview-heading h2{font-size:20px}
+.studio-page #expand-preview{white-space:nowrap;font-size:13px;min-height:34px;padding:6px 10px;border-radius:9px;border-width:1px}
+.studio-page .publish-panel{padding:0 12px 6px;gap:6px}
+.studio-page .publish-panel button,.studio-page .publish-panel a{min-height:32px;padding:6px 10px;font-size:12px}
+.studio-page .screen{padding:4px;container-type:size}
+.studio-page .game-frame{height:min(100cqh,calc(100cqw * 525 / 320));width:auto;max-width:100%;flex:none}
+.studio-page .preview-footer{padding:6px 12px;gap:8px}
+.studio-page .jump-button{min-height:38px;font-size:16px;padding:6px 14px;min-width:160px}
+.studio-page .play-tip{min-height:34px;padding:4px 8px;font-size:11px}
+.studio-page #game-code{padding:6px 12px;font-size:12px}
+.studio-page #game-code[open] #game-source{position:absolute;bottom:84px;left:12px;right:12px;max-height:45%;z-index:5;box-shadow:0 6px 24px #0003}
+.studio-page.embedded-studio{padding:0}
+.studio-page.embedded-studio>.topbar{display:none}
+.studio-page.embedded-studio main{margin-top:0}
+.studio-page.preview-expanded #preview-panel{position:fixed;inset:0;z-index:50;border-radius:0;width:100%;height:100dvh;visibility:visible}
+.studio-page.preview-expanded .publish-panel,.studio-page.preview-expanded #game-code,.studio-page.preview-expanded .mobile-tabs{display:none}
+.studio-page.preview-expanded .screen{padding:4px}
+.studio-page.preview-expanded .preview-footer{justify-content:center}
+.studio-page.preview-expanded .play-tip{flex:0 1 330px}
+.studio-page.preview-expanded .jump-button{flex:0 1 320px}
+@media(max-width:1100px),(pointer:coarse) and (max-width:1400px){
+ .studio-page.embedded-studio{padding:0 0 66px}
+ .studio-page .preview-heading h2{font-size:18px}
+ .studio-page .preview-heading .pill{font-size:11px;padding:4px 7px}
+ .studio-page .publish-panel{flex-wrap:wrap}
+ .studio-page .preview-footer .play-tip{display:none}
+ .studio-page .jump-button{flex:1;min-width:0}
+}

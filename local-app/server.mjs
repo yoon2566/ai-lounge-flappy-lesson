@@ -8,6 +8,7 @@ import vm from 'node:vm';
 import {createClassroomService,makePasswordHash} from './classroom-server.cjs';
 import {MODEL,imageRequest,generateImage} from './image-api.mjs';
 import {COURSE_PROMPTS,generateCourse} from './course-api.mjs';
+import {refinePrompt} from './prompt-api.mjs';
 import {createLocalRankings} from './rankings-local.mjs';
 import {createRankingBridge} from './rankings-bridge.mjs';
 const root=path.dirname(fileURLToPath(import.meta.url)),pub=path.join(root,'public'),store=process.env.FLAPPY_STORE_DIR||path.join(root,'.local');
@@ -43,11 +44,20 @@ const server=http.createServer(async(req,res)=>{try{
  if(url.pathname.startsWith('/api/flappy/')){if(!['GET','POST'].includes(req.method))return json(res,{error:'지원하지 않는 요청이에요.'},405);const payload=req.method==='POST'?await body(req,2048):{},room=payload.room||url.searchParams.get('room');allow(req,room,4);const route=url.pathname.slice('/api/flappy/'.length);if(req.method==='GET'&&route!=='leaderboard')return json(res,{error:'POST 요청이 필요해요.'},405);return json(res,await rankingBridge.request(route,room,payload,req.method));}
  if(url.pathname==='/api/health')return json(res,{ok:true,localOnly:true,keyAvailable:!!key,model:MODEL});
  if(url.pathname==='/api/course-prompts'&&req.method==='GET')return json(res,COURSE_PROMPTS);
+ if(url.pathname==='/api/course-prompt'&&req.method==='POST'){
+  const data=await body(req,16000);allow(req,data.room,data.kind==='classic'?5:7);if(!key)return json(res,{error:'셰르파 API 키를 확인해 주세요.'},503);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);res.on('close',()=>{if(!res.writableEnded)controller.abort();});
+  try{return json(res,await refinePrompt(data,key,controller.signal));}finally{clearTimeout(timer);}
+ }
  if(url.pathname==='/api/course'&&req.method==='POST'){
   const data=await body(req);allow(req,data.room,data.kind==='classic'?5:7);if(!key)return json(res,{error:'셰르파 API 키를 확인해 주세요.'},503);
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),180000);res.on('close',()=>{if(!res.writableEnded)controller.abort();});
   const id=randomUUID(),dir=path.join(store,'code');fs.mkdirSync(dir,{recursive:true});
-  try{const result=await generateCourse(data,key,controller.signal,result=>fs.writeFileSync(path.join(dir,id+'.json'),JSON.stringify({id,room:data.room,kind:data.kind,prompt:data.prompt,createdAt:new Date().toISOString(),...result},null,2)));return json(res,{...result,id});}finally{clearTimeout(timer);}
+  const streaming=data.stream===true;
+  const send=event=>{if(!res.destroyed&&!res.writableEnded)res.write(JSON.stringify(event)+'\n');};
+  if(streaming){res.writeHead(200,{'Content-Type':'application/x-ndjson; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.flushHeaders();send({type:'start'});}
+  try{const result=await generateCourse(data,key,controller.signal,result=>fs.writeFileSync(path.join(dir,id+'.json'),JSON.stringify({id,room:data.room,kind:data.kind,prompt:data.prompt,createdAt:new Date().toISOString(),...result},null,2)),streaming?delta=>send({type:'delta',text:delta}):null);if(streaming){send({type:'complete',...result,id});return res.end();}return json(res,{...result,id});}
+  catch(error){if(!streaming)throw error;send({type:'error',error:error.name==='AbortError'?'기다리기를 멈췄어요. 이전 게임은 그대로 있어요.':error.message});res.end();}finally{clearTimeout(timer);}
  }
  if(url.pathname==='/api/assets'&&req.method==='POST'){
   const data=await body(req,7e6);allow(req,data.room);if(!['frame1','frame2','background','item','obstacle'].includes(data.kind))return json(res,{error:'그림 종류를 확인해 주세요.'},400);

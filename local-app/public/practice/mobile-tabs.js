@@ -1,5 +1,6 @@
 (() => {
   const compact=matchMedia('(max-width:1100px), (pointer:coarse) and (max-width:1400px)');
+  const isCompact=()=>document.body.classList.contains('code-page')||compact.matches;
   const names=['chat','preview'];
   let active='chat';
   function update(){
@@ -9,8 +10,8 @@
       const selected=name===active;
       tab.setAttribute('aria-selected',String(selected));
       tab.tabIndex=selected?0:-1;
-      panel.inert=compact.matches&&!selected;
-      if(compact.matches)panel.setAttribute('aria-hidden',String(!selected));
+      panel.inert=isCompact()&&!selected;
+      if(isCompact())panel.setAttribute('aria-hidden',String(!selected));
       else panel.removeAttribute('aria-hidden');
     }
   }

@@ -1,5 +1,6 @@
 import {prepareFrames,alignFrame,loadImage,dataURL} from './images.js';
 import {readProject,writeProject} from './store.js';
+import {withGameAspectRatio} from '/game-aspect.mjs';
 const $=id=>document.getElementById(id),room=new URLSearchParams(location.search).get('room')||'';
 let state={step:0,assets:{},character:null,settings:{speed:1,lives:1,jump:1,interval:.3,ability:'none',sound:true},history:[]},baseTemplate='',choices=[],working=false,active=true,permitted=false,controller=null,animation=null,projectId;
 const names=['주인공','배경','장애물','아이템','속도','목숨','능력','소리','내 생각'];
@@ -11,8 +12,8 @@ function note(text,error=false){$('status').textContent=error?'확인해 주세�
 let saveQueue=Promise.resolve();
 async function save(){const snapshot=structuredClone(state);saveQueue=saveQueue.then(async()=>{const latest=await readProject(projectId)||{};await writeProject(projectId,{...latest,...snapshot,courseGames:latest.courseGames||snapshot.courseGames});}).catch(()=>note('이 브라우저에 저장하지 못했어요. 게임 HTML을 내려받아 보관해 주세요.',true));return saveQueue;}
 function history(text){state.history.push(text);state.history=state.history.slice(-30);save();}
-function gameHTML(portable=false){const config={...state.settings,assets:portable?state.assets:{...state.assets,...state.assetURLs}};return (state.template||baseTemplate).replace('__FLAPPY_CONFIG__',JSON.stringify(config).replace(/</g,'\\u003c'));}
-function preview(){if(active&&permitted){$('game').srcdoc=gameHTML();$('status').textContent='미리보기';}}
+function gameHTML(portable=false){const config={...state.settings,assets:portable?state.assets:{...state.assets,...state.assetURLs}};return withGameAspectRatio((state.template||baseTemplate).replace('__FLAPPY_CONFIG__',JSON.stringify(config).replace(/</g,'\\u003c')));}
+function preview(){if(active&&permitted){$('game').srcdoc=gameHTML();$('status').textContent='미리보기';if($('game-code')?.open)$('game-source').textContent=gameHTML();}}
 function download(){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([gameHTML(true)],{type:'text/html;charset=utf-8'}));a.href=url;a.download='나만의_플래피게임.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);}
 function motionFor(subject){if(/비행기/.test(subject))return '프로펠러를 다른 각도로 돌려 줘';if(/로봇|우주선/.test(subject))return '뒤쪽 추진 불꽃을 두 배로 길게 바꿔 줘';if(/자동차/.test(subject))return '바퀴 살의 각도만 돌려 줘';if(/새|앵무|부엉|벌새|참새|용/.test(subject))return '날개를 위로 들어 올려 줘';if(/판다|고양이|여우|공룡|거북|토끼|강아지/.test(subject))return '한쪽 발을 살짝 들어 줘';return '그림에 있는 움직일 수 있는 부분 하나를 골라 다음 동작으로 살짝 움직여 줘';}
 async function api(url,options={}){const r=await fetch(url,{...options,headers:{'Content-Type':'application/json',...options.headers}});const data=await r.json();if(!r.ok)throw Error(data.error||'요청에 실패했어요.');return data;}
@@ -108,6 +109,7 @@ function showOrigin(){originNote.replaceChildren(node('p',state.courseGames?.var
 async function syncCourse(){if(!projectId)return;await saveQueue;const latest=await readProject(projectId);if(!latest?.courseGames)return;state.courseGames=latest.courseGames;if(latest.courseVariantId&&latest.courseVariantId!==state.courseVariantId){state.courseVariantId=latest.courseVariantId;state.template=latest.template;await save();preview();}showOrigin();}
 const blocker=node('div',null,'');blocker.id='studio-lock';blocker.append(node('h2','선생님 설명을 들어 주세요'),node('p','게임 만들기 페이지가 열리면 시작해요.'));blocker.hidden=true;document.body.append(blocker);
 $('jump').onclick=()=>{if(!permitted)return;$('game').contentWindow.postMessage({channel:'flappy-lesson',command:'tap'},'*');$('game').focus();};$('restart').onclick=preview;$('download').onclick=download;
+$('publish').onclick=()=>{if(permitted&&!working)share();};$('studio-board').href='/board?room='+encodeURIComponent(room);$('game-code').ontoggle=()=>{if($('game-code').open)$('game-source').textContent=gameHTML();};
 window.addEventListener('message',e=>{
  if(e.source===parent&&e.origin===location.origin&&e.data?.channel==='grade1-classroom'){active=e.data.active===true;$('game').contentWindow.postMessage({channel:'flappy-lesson',command:active?'resume':'pause'},'*');if(!active&&controller)controller.abort();if(active)syncCourse();}
  if(e.source===$('game').contentWindow&&e.data?.channel==='flappy-state'&&!working)$('status').textContent=({ready:'준비',playing:'비행 중',dead:'게임 끝',resetting:'다시 준비'})[e.data.state]||'미리보기';

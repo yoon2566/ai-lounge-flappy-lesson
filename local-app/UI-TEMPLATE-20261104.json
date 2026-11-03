@@ -1,0 +1,30 @@
+{
+  "repository": "https://github.com/yoon2566/ai-sherpa-classroom-template",
+  "commit": "e7aeee3ea26330e6b13c5f0b97609cb84aecc8ee",
+  "completedBeforeChanges": true,
+  "theme": "gray",
+  "copied": [
+    {
+      "source": "public/lounge-portal.css",
+      "target": "lounge-portal.css",
+      "sourceSHA256": "e3d121d99105063e0e04c993a644d3a3a7979b5aa2f8e85afcabdf351f9f7a9e"
+    },
+    {
+      "source": "public/portal-theme.css",
+      "target": "portal-theme.css",
+      "sourceSHA256": "3ad586a16e42366b6c5d575a4ecc04903a741c477f5536217a08e4980a11582b"
+    },
+    {
+      "source": "public/lesson.css",
+      "target": "lesson.css",
+      "sourceSHA256": "22f6329bee5400241bb2be641f8141466668d920efa330b321da6cef34f868ce"
+    },
+    {
+      "source": "public/workshop-base.css",
+      "target": "practice/chat.css",
+      "sourceSHA256": "00c4d0316e76755a8733d97a57339b879255759d913cb4ab9dd4663233bdcb8c"
+    }
+  ],
+  "backup": "local-app/.local/backups/ui-before-gray-20261104",
+  "scope": "Local Flappy UI; existing services and data preserved"
+}

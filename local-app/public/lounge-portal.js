@@ -25,7 +25,7 @@ function renderRooms(added=rooms,append=false){
   added.forEach(room=>{
     const card=$('class-card-template').content.firstElementChild.cloneNode(true);card.dataset.code=room.code;card.classList.toggle('is-new',room.code===createdCode);card.querySelector('.class-name').textContent=room.name;card.querySelector('.card-code strong').textContent=room.code;
     const time=card.querySelector('time');time.dateTime=new Date(room.createdAt).toISOString();time.textContent=roomDateFormat.format(room.createdAt);
-    const remove=card.querySelector('.delete-class');remove.setAttribute('aria-label',room.name+' 삭제');remove.onclick=()=>showDelete(room);card.querySelector('.teacher-enter').onclick=()=>teacherEntry(room);fragment.append(card);
+    const remove=card.querySelector('.delete-class');remove.setAttribute('aria-label',room.name+' 삭제');remove.onclick=()=>showDelete(room);card.querySelector('.teacher-enter').onclick=()=>teacherEntry(room);card.querySelector('.class-board').href='/board?room='+encodeURIComponent(room.code);fragment.append(card);
   });
   grid.append(fragment);
 }
