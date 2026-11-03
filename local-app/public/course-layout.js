@@ -11,7 +11,7 @@ view.append(sentencePlaceholder);
 const sentenceHeader=document.createElement('div');sentenceHeader.className='sentence-heading';sentenceHeader.innerHTML='<span>02</span><strong>읽고, 고치고, 확정해요</strong>';byId('sentence-panel').prepend(sentenceHeader);
 const side=document.createElement('div');side.className='result-sidebar';
 side.append(result.querySelector('.result-heading'));
-const lead=document.createElement('p');lead.className='result-lead';lead.textContent='내 설명이 게임이 됐어요.\n직접 날아보고 바꾸고 싶은 곳을 찾아보세요.';side.append(lead);
+const lead=document.createElement('p');lead.className='result-lead';lead.textContent='내 설명이 게임이 됐어요.\nPC는 마우스·스페이스바,\n태블릿은 화면 터치로 날아요.';side.append(lead);
 side.append(byId('actions'));
 const edit=document.createElement('button');edit.type='button';edit.className='edit-prompt';edit.textContent='← 게임 설명 고치기';edit.onclick=()=>byId('chat-tab').click();side.append(edit);
 const code=chat.querySelector('details:not(#custom-answer)');code.className='source-details';side.append(code,byId('next'));result.prepend(side);

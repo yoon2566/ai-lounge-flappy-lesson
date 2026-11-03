@@ -25,3 +25,5 @@
 #sentence-panel{min-height:0;gap:9px;padding-top:16px;padding-bottom:16px}.sentence-heading{display:none}#sentence{min-height:96px}#sentence-panel .hint{line-height:1.5}#choose-again{min-height:26px}#sentence-panel::before{top:22px}
 .question-progress,.question-progress strong,.question-choice>.hint,#custom-answer summary,#sentence-panel>label,#sentence-panel .hint,#choose-again,#review-view>p,.result-lead,.edit-prompt,#edit-answers{color:#686872}
 .code-page .mobile-tabs button,.question-navigation button:not(:disabled){color:#686872}
+
+.device-help{font-size:13px;line-height:1.6;color:#686872;margin:-10px 0 18px}#question-title:focus:not(:focus-visible){outline:none}

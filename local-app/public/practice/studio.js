@@ -108,7 +108,14 @@ const originNote=node('div',null,'course-origin');$('chat-panel').insertBefore(o
 function showOrigin(){originNote.replaceChildren(node('p',state.courseGames?.variant?'앞 단계에서 만든 내 코인 게임에 그림을 넣고 수정해요.':'지금은 연습용 게임이에요. 앞 단계에서 내 게임을 먼저 만들 수 있어요.'));if(!state.courseGames?.variant)originNote.append(btn('내 코인 게임 만들기로',()=>parent.postMessage({channel:'course-go',page:7},location.origin)));}
 async function syncCourse(){if(!projectId)return;await saveQueue;const latest=await readProject(projectId);if(!latest?.courseGames)return;state.courseGames=latest.courseGames;if(latest.courseVariantId&&latest.courseVariantId!==state.courseVariantId){state.courseVariantId=latest.courseVariantId;state.template=latest.template;await save();preview();}showOrigin();}
 const blocker=node('div',null,'');blocker.id='studio-lock';blocker.append(node('h2','선생님 설명을 들어 주세요'),node('p','게임 만들기 페이지가 열리면 시작해요.'));blocker.hidden=true;document.body.append(blocker);
-$('jump').onclick=()=>{if(!permitted)return;$('game').contentWindow.postMessage({channel:'flappy-lesson',command:'tap'},'*');$('game').focus();};$('restart').onclick=preview;$('download').onclick=download;
+$('jump').onclick=()=>{if(!permitted)return;$('game').contentWindow.postMessage({channel:'flappy-lesson',command:'tap'},'*');$('game').focus();};
+$('restart').onclick=()=>{
+ if(!active||!permitted||working)return;
+ const frame=$('game');
+ frame.addEventListener('load',()=>{if(active&&permitted&&!working&&frame.isConnected&&!document.hidden&&!frame.closest('[hidden],[inert],[aria-hidden="true"]')&&frame.getClientRects().length)frame.focus({preventScroll:true});},{once:true});
+ preview();
+};
+$('download').onclick=download;
 $('publish').onclick=()=>{if(permitted&&!working)share();};$('studio-board').href='/board?room='+encodeURIComponent(room);$('game-code').ontoggle=()=>{if($('game-code').open)$('game-source').textContent=gameHTML();};
 window.addEventListener('message',e=>{
  if(e.source===parent&&e.origin===location.origin&&e.data?.channel==='grade1-classroom'){active=e.data.active===true;$('game').contentWindow.postMessage({channel:'flappy-lesson',command:active?'resume':'pause'},'*');if(!active&&controller)controller.abort();if(active)syncCourse();}

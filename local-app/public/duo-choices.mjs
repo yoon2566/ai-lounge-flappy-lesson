@@ -10,9 +10,6 @@ const coin=(x,y,r=12,kind=0)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${kind
 const cloud=(x,y,scale=1,kind=0)=>`<g transform="translate(${x} ${y}) scale(${scale})" fill="${C.cloud}"><rect x="-23" y="-3" width="48" height="22" rx="11"/><circle cx="-12" cy="-3" r="12"/><circle cx="6" cy="-8" r="16"/>${kind===1?'<circle cx="-25" cy="7" r="9"/><circle cx="24" cy="4" r="12"/><circle cx="-4" cy="14" r="11"/>':''}${kind===2?'<path d="M-10 0l6 3m8 0l6-3M-5 12q5-5 10 0" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>':''}</g>`;
 const pipe=(x,top=24,bottom=78,w=22)=>rect(x,0,w,top,'#9da7ad',3)+rect(x-3,Math.max(0,top-8),w+6,8,'#7e8993',3)+rect(x,bottom,w,110-bottom,'#9da7ad',3)+rect(x-3,bottom,w+6,8,'#7e8993',3);
 const sky=()=>rect(0,0,180,110,C.sky,10)+rect(0,101,180,9,'#dfe5e7',0);
-const phone=(x=52,y=18)=>rect(x,y,42,69,C.ink,8)+rect(x+4,y+7,34,48,'#fff',4)+`<circle cx="${x+21}" cy="${y+61}" r="3" fill="#b9c1cd"/>`;
-const key=(x=35,y=67,w=104)=>rect(x,y+3,w,25,'#a9afb8',6)+rect(x,y,w,24,'#f8f9fb',6)+text(x+w/2,y+16,'SPACE',10);
-const tap=(x,y)=>`<circle cx="${x}" cy="${y}" r="15" fill="none" stroke="#aeb7c3" stroke-width="2" stroke-dasharray="4 5"/><path d="M${x} ${y+13}v-20q0-5 5-4l1 15 9 2q4 1 3 6l-3 15h-15l-8-13q-3-6 2-6Z" fill="#eee2d3" stroke="#b5a08e" stroke-width="2"/>`;
 const retry=(x=90,y=53,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><path d="M15-13A21 21 0 1 0 21 7M15-25v13H2" fill="none" stroke="${C.ink}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></g>`;
 const frame=(inside)=>rect(22,7,136,96,'#dce3e8',10)+rect(28,13,124,84,'#fff',6)+inside;
 const score=(n=1,x=90,y=31)=>text(x,y,String(n),23);
@@ -20,7 +17,7 @@ const burst=(x,y)=>star(x-25,y-18,6,C.coin)+star(x+26,y-14,8,C.coin)+star(x+23,y
 
 function classic(step,i){
  switch(step){
-  case 0:return bird(132,30,.72)+arrow(132,69,132,51,C.muted)+(i===0?phone(30,7)+key(51,76,94):i===1?phone(42,14)+tap(64,45):key(20,61,100)+arrow(71,48,71,24));
+  case 0:return sky()+`<g opacity=".22">${bird(69,86,.6)}</g>`+bird(69,[61,43,23][i],.8)+arrow(121,88,121,[61,43,23][i])+text(90,106,['부드럽게','알맞게','힘차게'][i],10);
   case 1:return sky()+bird(70,30,.8)+arrow(115,29,115,[60,87,90][i])+(i===2?line(103,41,103,50,C.muted,2)+line(103,60,103,73,C.ink,3):'')+text(72,96,['천천히','빠르게','점점 빠르게'][i],11);
   case 2:return bird(87,57,[1.2,1.38,1.55][i],[C.bird,C.blue,'#e8ebef'][i])+star(143,27,7,'#d4dce4');
   case 3:return sky()+pipe(102,[25,12,38][i],[78,66,94][i],20)+pipe(150,[25,44,15][i],[78,98,73][i],18)+bird(43,54,.7)+arrow(91,55,65,55)+(i===2?arrow(133,67,133,37,C.muted):'');
@@ -28,8 +25,8 @@ function classic(step,i){
   case 5:return sky()+pipe(143,26,80)+bird(38,56,.7)+Array.from({length:i+1},(_,n)=>arrow(125-n*28,55,105-n*28,55)).join('')+text(90,97,['천천히','보통','점점 빠르게'][i],11);
   case 6:return frame(bird(72,66,.65)+(i===1?score(1,43,35):score(1,90,36))+(i===2?burst(90,34):''));
   case 7:return frame(i===0?text(90,52,'게임 끝',19)+bird(86,78,.55):i===1?`<g opacity=".4">${bird(88,56,1)}</g>`+burst(88,56):text(90,37,'내 점수',12)+score(12,90,73));
-  case 8:return frame(text(90,34,['톡! 누르면 시작','돌기둥 사이로!','몇 점까지 갈까?'][i],12)+bird(63,65,.7)+(i===0?tap(111,61):i===1?pipe(119,43,83,17):score('?',121,77)));
-  case 9:return i===0?rect(25,29,130,52,'#e5e8ed',12)+retry(90,54,.72):i===1?phone(68,13)+tap(89,48):key(15,70,102)+retry(137,36,.7)+text(60,42,'또는',11);
+  case 8:return frame(text(90,34,['준비됐나요?','돌기둥 사이로!','몇 점까지 갈까?'][i],12)+bird(63,65,.7)+(i===0?rect(104,51,33,29,'#e6e9ee',7)+`<path d="M116 58l12 8-12 8Z" fill="${C.ink}"/>`:i===1?pipe(119,43,83,17):score('?',121,77)));
+  case 9:return frame(i===0?text(90,33,'다시 0점부터',12)+score(0,90,70)+arrow(118,62,139,62):i===1?text(90,34,'준비됐나요?',14)+bird(64,67,.65)+rect(101,54,36,25,'#e6e9ee',6)+text(119,71,'시작',11):text(90,35,'곧 시작해요',12)+text(90,70,'3 · 2 · 1',25));
   default:return bird();
  }
 }
@@ -42,7 +39,7 @@ function variant(step,i){
   case 4:return sky()+bird(25,62,.55)+(i===0?cloud(134,52,.65):i===1?cloud(72,47,.6)+cloud(118,65,.6)+cloud(163,47,.6):cloud(73,46,.45)+cloud(119,68,.5)+cloud(146,37,.5)+cloud(166,76,.48));
   case 5:return bird(54,67,.9)+coin(107,63,13)+text(120,32,'+1',23)+(i===1?burst(111,59):i===2?`<path d="M147 43V19l18-5v25M147 19l18-5" fill="none" stroke="${C.ink}" stroke-width="3"/><ellipse cx="142" cy="44" rx="6" ry="4" fill="${C.ink}"/><ellipse cx="160" cy="39" rx="6" ry="4" fill="${C.ink}"/>`:'');
   case 6:return frame(i===0?coin(64,57,19)+score(8,111,67):i===1?text(90,36,'다시 도전!',16)+retry(90,71,.7):`<g opacity=".35">${bird(87,55,1.2)}</g>`+burst(90,55));
-  case 7:return sky()+bird(60,75,.85)+arrow(114,81,114,[37,57,15][i])+text(56,24,['그대로','살짝','힘차게'][i],12);
+  case 7:return sky()+bird(60,75,.85)+arrow(114,81,114,[37,57,15][i])+text(56,24,['같은 힘','약한 힘','강한 힘'][i],12);
   case 8:return i===0?rect(0,0,180,110,'#e8f2f8',10)+`<circle cx="134" cy="27" r="16" fill="#f4d169"/>`+`<g fill="#fff"><ellipse cx="43" cy="32" rx="24" ry="10"/><circle cx="40" cy="27" r="12"/></g>`+bird(87,68,.85):i===1?rect(0,0,180,110,'#434d68',10)+`<path d="M131 12a21 21 0 1 0 25 29A22 22 0 0 1 131 12Z" fill="#f9e6a4"/>`+star(30,22,4)+star(52,65,3)+star(145,84,4)+bird(89,62,.85):rect(0,0,180,110,'#efd5c9',10)+rect(0,76,180,34,'#d8b1b4',0)+`<circle cx="133" cy="70" r="23" fill="#efb35f"/>`+bird(68,46,.9);
   case 9:return frame(i===0?score(0,89,36)+coin(60,69,12)+cloud(118,68,.6):i===1?score(0,90,35)+bird(52,70,.55)+coin(98,68,10)+cloud(133,65,.4):text(90,34,'다시 시작!',14)+score(0,47,70)+coin(90,66,10)+cloud(127,65,.4))+retry(153,93,.4);
   default:return bird();

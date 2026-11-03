@@ -198,7 +198,7 @@ window.addEventListener('keydown',e=>{if(e.key==='Escape')parent.postMessage({ch
   setupRanking();window.addEventListener('message',receiveLessonMessage);
 
   canvas.addEventListener('pointerdown',event=>{if(event.button!==0||(rankLayer&&!rankLayer.hidden))return;event.preventDefault();activateAudio();canvas.focus({preventScroll:true});if(mode==='dead'){const rect=canvas.getBoundingClientRect(),x=(event.clientX-rect.left)*320/rect.width,yy=(event.clientY-rect.top)*525/rect.height;if(x>=120&&x<=200&&yy>=280&&yy<=330)replay();}else press();});
-  window.addEventListener('keydown',event=>{if(event.code!=='Space'||(rankLayer&&!rankLayer.hidden))return;event.preventDefault();activateAudio();if(mode==='dead')replay();else press();});
+  window.addEventListener('keydown',event=>{if(event.code!=='Space'||(rankLayer&&!rankLayer.hidden))return;event.preventDefault();if(event.repeat)return;activateAudio();if(mode==='dead')replay();else press();});
   ready();requestAnimationFrame(render);
 })();
 </script>
