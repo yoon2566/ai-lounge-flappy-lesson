@@ -1,0 +1,13 @@
+/* Duolingo-inspired interaction language, original Flappy artwork and neutral palette. */
+:root{--duo-ink:#343438;--duo-muted:#85858b;--duo-border:#e2e2e5;--duo-soft:#f5f5f6;--duo-shadow:#bdbdc4;--radius:18px;--surface:#fff}
+body{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;color:var(--duo-ink);background:#fff;letter-spacing:-.3px}
+button,a.button{font-weight:800;border:2px solid var(--duo-border);border-radius:14px;box-shadow:0 3px 0 var(--duo-border);background:#fff;transition:background .12s,transform .12s,box-shadow .12s;touch-action:manipulation}
+button:hover:not(:disabled){background:#f5f5f6;border-color:#d2d2d8;box-shadow:0 3px 0 #d2d2d8}
+button:active:not(:disabled){transform:translateY(3px);box-shadow:none!important}
+body .primary,body .button.primary,body .join-submit,body .teacher-enter{background:#45454b!important;border:2px solid #45454b;color:#fff;box-shadow:0 4px 0 #232327!important;border-radius:14px;font-weight:900}
+body .primary:hover:not(:disabled),body .teacher-enter:hover:not(:disabled),body .join-submit:hover:not(:disabled){background:#53535b!important;box-shadow:0 4px 0 #232327!important}
+button:disabled{opacity:.4;box-shadow:none!important;cursor:not-allowed}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid #85858e;outline-offset:4px}
+input,textarea{border:2px solid #dfdfe4;border-radius:12px;background:#f8f8f9;color:#343438}h1,h2,h3{color:#343438;font-weight:900;letter-spacing:-1px}p{color:#777780}
+.pill,.tag,.brand-version{border:0;background:#f0f0f3;color:#777780;font-weight:800;border-radius:9px}
+dialog{border:2px solid #e2e2e7;box-shadow:0 8px 0 #dedee6,0 25px 60px #0002;border-radius:24px}dialog::backdrop{background:#33333b70}dialog h2{font-size:26px}dialog input{min-height:48px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}

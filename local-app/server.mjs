@@ -28,7 +28,7 @@ function json(res,data,status=200){res.writeHead(status,{'Content-Type':'applica
 async function body(req,max=2e6){let chunks=[],n=0;for await(const b of req){n+=b.length;if(n>max)throw Object.assign(Error('요청이 너무 커요.'),{status:413});chunks.push(b);}try{return JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}')}catch{throw Object.assign(Error('요청 형식이 맞지 않아요.'),{status:400});}}
 function allow(req,room,page=8){if(!service.canAccess(req,room,page))throw Object.assign(Error('선생님이 이 페이지를 열면 시작할 수 있어요.'),{status:403});}
 const publicJob=j=>({id:j.id,status:j.status,kind:j.kind,subject:j.subject,motion:j.motion,referenceId:j.referenceId,url:j.url,cost:j.usage?.cost,error:j.error});
-const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.ttf':'font/ttf'};
+const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml','.ttf':'font/ttf'};
 const server=http.createServer(async(req,res)=>{try{
  const url=new URL(req.url,'http://'+req.headers.host);
  if(!['127.0.0.1','localhost','[::1]'].includes(url.hostname))return json(res,{error:'로컬 주소에서 열어 주세요.'},403);

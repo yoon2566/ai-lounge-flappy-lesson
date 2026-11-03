@@ -18,8 +18,11 @@ const code=chat.querySelector('details:not(#custom-answer)');code.className='sou
 const scene=document.createElement('div');scene.className='result-scene';scene.append(byId('empty'),byId('game'));result.append(scene);
 side.append(byId('live-progress'));
 const status=byId('status');view.after(status);
-// Keep the selection and its returned sentence next to one another.
-function fitSentence(){const field=byId('sentence');if(byId('sentence-panel').hidden)return;field.style.height='auto';field.style.height=Math.max(128,field.scrollHeight+2)+'px';}
+// Fit the AI sentence after switching from picture choices to review.
+function fitSentence(){const field=byId('sentence');if(byId('sentence-panel').hidden)return;field.style.height='auto';field.style.height=Math.max(96,field.scrollHeight+2)+'px';}
 function syncSentence(){sentencePlaceholder.hidden=!byId('sentence-panel').hidden;requestAnimationFrame(fitSentence);}
 byId('sentence').addEventListener('input',fitSentence);window.addEventListener('resize',fitSentence);
 new MutationObserver(syncSentence).observe(byId('sentence-panel'),{attributes:true,attributeFilter:['hidden']});syncSentence();
+const chooseAgain=document.createElement('button');chooseAgain.id='choose-again';chooseAgain.type='button';chooseAgain.textContent='← 다른 답 고르기';
+chooseAgain.onclick=()=>setExerciseStage('choose');byId('sentence-panel').append(chooseAgain);
+export function setExerciseStage(stage){document.body.dataset.exerciseStage=stage;requestAnimationFrame(fitSentence);}

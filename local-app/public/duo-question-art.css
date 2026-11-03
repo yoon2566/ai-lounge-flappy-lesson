@@ -1,0 +1,13 @@
+.answer-options:has(.duo-picture-choice){display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch}
+.answer-options .duo-picture-choice{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:10px;position:relative;min-width:0;min-height:174px;padding:12px 11px 15px;border:2px solid #e2e3e7;border-bottom-width:5px;border-radius:15px;background:#fff;box-shadow:none;transform:none;text-align:center;line-height:1.5}
+.answer-options .duo-picture-choice::before{display:none;content:none}
+.answer-options .duo-picture-choice:hover:not(:disabled){background:#f8f9fa;border-color:#b6bbc4;transform:translateY(-1px)}
+.answer-options .duo-picture-choice[aria-pressed=true]{border-color:#535965;background:#f0f2f5;box-shadow:none}
+.answer-options .duo-picture-choice[aria-pressed=true]::after{content:'✓';position:absolute;top:6px;right:7px;border-radius:50%;width:21px;height:21px;display:grid;place-items:center;color:white;background:#535965;font:800 13px system-ui,sans-serif}
+.answer-options .duo-picture-choice:active:not(:disabled){border-bottom-width:2px;margin-top:3px;transform:none}
+.duo-picture-choice .choice-picture{display:block;width:100%;height:clamp(72px,9vw,112px);margin:0;flex:none}
+.duo-picture-choice .choice-picture svg{display:block;width:100%;height:100%;overflow:visible}
+.duo-picture-choice .choice-label{display:block;font-size:15px;font-weight:700;line-height:1.5;color:#414651;margin:auto 0 0;word-break:keep-all;overflow-wrap:anywhere}
+@media(max-height:650px) and (min-width:761px){.answer-options .duo-picture-choice{min-height:150px;padding:9px 9px 11px;gap:6px}.duo-picture-choice .choice-picture{height:75px}.duo-picture-choice .choice-label{font-size:13px}}
+@media(max-width:760px){.answer-options:has(.duo-picture-choice){gap:7px}.answer-options .duo-picture-choice{min-height:155px;padding:8px 6px 11px;border-radius:12px;gap:7px}.duo-picture-choice .choice-picture{height:70px}.duo-picture-choice .choice-label{font-size:12px;line-height:1.55}.answer-options .duo-picture-choice[aria-pressed=true]::after{width:17px;height:17px;font-size:11px;top:4px;right:4px}}
+@media(prefers-reduced-motion:reduce){.answer-options .duo-picture-choice{transition:none!important;transform:none!important}}
