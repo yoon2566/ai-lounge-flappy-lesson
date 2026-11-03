@@ -1,0 +1,34 @@
+'use strict';
+const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),code=(params.get('room')||'').toUpperCase(),wantTeacher=params.get('role')==='teacher';
+let page=1,openPages=code?[]:[1,2,3,4,5],teacher=false,unavailable=false,polling=false,practiceFrame=null,demoActive=false;
+const pages=[...document.querySelectorAll('[data-page]')];
+async function request(url,options={}){const r=await fetch(url,{...options,cache:'no-store',signal:AbortSignal.timeout(7000)});const data=await r.json();if(!r.ok)throw Object.assign(Error(data.error||'연결을 확인해 주세요.'),{status:r.status});return data}
+const allowed=n=>!unavailable&&(teacher||openPages.includes(n));
+function neighboring(direction){for(let n=page+direction;n>=1&&n<=5;n+=direction)if(allowed(n))return n;return null}
+function sendPractice(active){if(practiceFrame){practiceFrame.hidden=!active;practiceFrame.inert=!active;practiceFrame.contentWindow.postMessage({channel:'grade1-classroom',active},location.origin)}}
+function render(){
+ const visible=allowed(page);pages.forEach((el,i)=>el.hidden=!(visible&&i+1===page));$('waiting').hidden=visible;
+ $('page-counter').textContent=visible?page+' / 5':'대기 중';$('previous').disabled=neighboring(-1)===null;$('next').disabled=neighboring(1)===null;
+ document.body.classList.toggle('practice-active',visible&&page===5);$('teacher-tools').hidden=!teacher;
+ $('page-lock').textContent=openPages.includes(page)?'현재 페이지 잠그기':'현재 페이지 열기';$('page-lock').setAttribute('aria-pressed',String(openPages.includes(page)));
+ if(visible&&page===4){if(!demoActive){$('demo-game').src='/original-game.html';demoActive=true}}else if(demoActive){$('demo-game').src='about:blank';demoActive=false}
+ if(visible&&page===5&&!practiceFrame){practiceFrame=document.createElement('iframe');practiceFrame.id='practice';practiceFrame.title='AI와 게임 수정하기';practiceFrame.allow='microphone';practiceFrame.src='/practice/index.html?course=1&room='+encodeURIComponent(code);practiceFrame.onload=()=>sendPractice(allowed(page)&&page===5);pages[4].append(practiceFrame)}
+ sendPractice(visible&&page===5);document.title=(visible?pages[page-1].getAttribute('aria-label'):'수업 대기')+' · AI 셰르파';
+}
+function move(direction){const target=neighboring(direction);if(target===null)return;page=target;render()}
+$('previous').onclick=()=>move(-1);$('next').onclick=()=>move(1);
+$('jump').onclick=()=>{$('demo-game').contentWindow.postMessage({channel:'flappy-lesson',command:'tap'},'*');$('demo-game').focus()};$('restart').onclick=()=>{$('demo-game').src='/original-game.html'};
+window.addEventListener('message',e=>{if(e.source===$('demo-game').contentWindow&&e.data?.channel==='flappy-lesson'&&[-1,1].includes(e.data.navigate))move(e.data.navigate)});
+window.addEventListener('keydown',e=>{if(e.isComposing||e.ctrlKey||e.metaKey||e.altKey||['INPUT','TEXTAREA','SELECT','BUTTON'].includes(e.target.tagName))return;if(page===4&&['Space','ArrowUp','ArrowDown'].includes(e.code)){$('demo-game').contentWindow.postMessage({channel:'flappy-lesson',code:{Space:32,ArrowUp:38,ArrowDown:40}[e.code],down:true},'*');e.preventDefault();return}if(e.code==='ArrowRight'){e.preventDefault();move(1)}if(e.code==='ArrowLeft'){e.preventDefault();move(-1)}});
+window.addEventListener('keyup',e=>{if(page===4&&['Space','ArrowUp','ArrowDown'].includes(e.code))$('demo-game').contentWindow.postMessage({channel:'flappy-lesson',code:{Space:32,ArrowUp:38,ArrowDown:40}[e.code],down:false},'*')});
+$('room-code').onclick=async()=>{if(!code)return;try{await navigator.clipboard.writeText(code);$('room-code').textContent='복사했어요!';setTimeout(()=>$('room-code').textContent='코드 '+code,1200)}catch{$('room-code').textContent='코드 '+code}};
+async function refresh(){
+ if(!code||polling)return;polling=true;
+ try{const data=await request('/api/classroom/'+encodeURIComponent(code));if(wantTeacher&&!data.canManage){location.replace('/?teacher=1&teach='+encodeURIComponent(code));return}const before=JSON.stringify([openPages,teacher,unavailable]);teacher=wantTeacher&&data.canManage;openPages=data.openPages;unavailable=false;$('room-name').textContent=data.name;$('room-code').textContent='코드 '+data.code;$('home').href=teacher?'/classes':'/';$('home').textContent=teacher?'← 수업 목록':'← 홈으로';document.body.classList.toggle('is-teacher',teacher);if(!teacher&&!allowed(page)&&openPages.length)page=openPages[0];if(before!==JSON.stringify([openPages,teacher,unavailable]))render()}
+ catch(e){if(e.status===404){unavailable=true;$('waiting-message').textContent='수업을 찾을 수 없어요. 홈에서 참여 코드를 확인해 주세요.';render()}else{$('teacher-status').textContent='연결을 확인하고 있어요.';if(!openPages.length){$('waiting-message').textContent='연결을 확인하고 있어요. 잠시만 기다려 주세요.';render()}}}
+ finally{polling=false}
+}
+async function changePages(payload){const buttons=$('teacher-tools').querySelectorAll('button');buttons.forEach(b=>b.disabled=true);try{await request('/api/classroom/'+code,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});$('teacher-status').textContent='학생 화면에 반영했어요.';await refresh()}catch(e){$('teacher-status').textContent=e.message}finally{buttons.forEach(b=>b.disabled=false)}}
+$('page-lock').onclick=()=>changePages({page,open:!openPages.includes(page)});$('lock-all').onclick=()=>changePages({lockAll:true});$('open-all').onclick=()=>changePages({maxPage:5});
+if(code&&!/^[A-F0-9]{6}$/.test(code)){unavailable=true;$('waiting-message').textContent='참여 코드를 확인해 주세요.'}
+render();if(code&&!unavailable){refresh();const timer=setInterval(refresh,1500);window.addEventListener('pagehide',()=>clearInterval(timer),{once:true})}

@@ -1,0 +1,34 @@
+[
+  {
+    "id": "cover",
+    "title": "표지"
+  },
+  {
+    "id": "goals",
+    "title": "학습 목표"
+  },
+  {
+    "id": "vibe",
+    "title": "AI와 게임 만들기"
+  },
+  {
+    "id": "classic-play",
+    "title": "1. 돌기둥 게임 해보기"
+  },
+  {
+    "id": "classic-code",
+    "title": "2. 돌기둥 게임 코드로 만들기"
+  },
+  {
+    "id": "variant-play",
+    "title": "3. 검은 구름·코인 게임 해보기"
+  },
+  {
+    "id": "variant-code",
+    "title": "4. 변형 게임 코드로 만들기"
+  },
+  {
+    "id": "practice",
+    "title": "5. AI 그림 주소 만들고 게임에 적용하기"
+  }
+]

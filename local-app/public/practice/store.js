@@ -1,0 +1,4 @@
+let database;
+async function db(){if(database)return database;database=await new Promise((resolve,reject)=>{const req=indexedDB.open('flappy-local-v2',1);req.onupgradeneeded=()=>req.result.createObjectStore('projects');req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});return database;}
+export async function readProject(key){const d=await db();return new Promise((resolve,reject)=>{const r=d.transaction('projects').objectStore('projects').get(key);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
+export async function writeProject(key,value){const d=await db();return new Promise((resolve,reject)=>{const t=d.transaction('projects','readwrite');t.objectStore('projects').put(structuredClone(value),key);t.oncomplete=resolve;t.onerror=()=>reject(t.error);});}

@@ -1,0 +1,172 @@
+[
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/25_PPT제작/PPT양식/HTML_템플릿/classroom-server.cjs",
+    "target": "classroom-server.cjs",
+    "sha256": "099b2db185f1413ea2b55fbfcb99327ca8663678856efa44b7f6d6d18a13d87a"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/25_PPT제작/PPT양식/HTML_템플릿/lounge-portal.css",
+    "target": "public/lounge-portal.css",
+    "sha256": "75843ab168f616aa837eecc5d731f942f0b4e07c8145d51eaa719210e3db5723"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/25_PPT제작/PPT양식/HTML_템플릿/lounge-portal.js",
+    "target": "public/lounge-portal.js",
+    "sha256": "dd7fcb14df69baac23dc5a8920f76224e7182f19912100b0daddb51600e762f6"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/52_공룡게임_1학년/classroom-app/portal.html",
+    "target": "public/index.html",
+    "sha256": "89b7d2d96c30775f62c4aadc6df3a42efea4a54820824470b0c10a9a11a8b39c"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/52_공룡게임_1학년/classroom-app/portal-theme.css",
+    "target": "public/portal-theme.css",
+    "sha256": "77be87f61f9e2e407019fdf645beebd55a7b85ae3c4d92eaf8016f5d67f69fcf"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/52_공룡게임_1학년/classroom-app/lesson.html",
+    "target": "public/lesson.html",
+    "sha256": "2b62e4d925360bb750035ea5a84467469795a540343b7ec774f6f105ffad738a"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/52_공룡게임_1학년/classroom-app/lesson.js",
+    "target": "public/lesson.js",
+    "sha256": "fdd8614da88c8e697e3723996bd3a6a2cb9407e0ca0c346d41dc42f0a355ad91"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/52_공룡게임_1학년/classroom-app/lesson.css",
+    "target": "public/lesson.css",
+    "sha256": "071db6b458451bd83a9a5765484e787fbadacfacb9edc1fa7107d719f3c36074"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/52_공룡게임_1학년/classroom-app/public/lesson-font.ttf",
+    "target": "public/lesson-font.ttf",
+    "sha256": "018174e8cdd366aff67c8d366c7dc806a7babbe7f2819fc23b00d59f7b8353d0"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/52_공룡게임_1학년/chat.css",
+    "target": "public/practice/chat.css",
+    "sha256": "d8a6b870f7c2fc81ac47a2ddd607243d2b305b787edb7da169ea1e7bbc7c7d41"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/52_공룡게임_1학년/mobile.css",
+    "target": "public/practice/mobile.css",
+    "sha256": "52f8d2a29a9ebe53f467a60df56276823377ce8df26dd93fd779f7c2567b2bd2"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/52_공룡게임_1학년/mobile-tabs.js",
+    "target": "public/practice/mobile-tabs.js",
+    "sha256": "4534248d043e7a9da3f5c1438fdc2818c85ed8fdb703854465884f72e7d00ae9"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/52_공룡게임_1학년/practice.html",
+    "target": "public/practice/index.html",
+    "sha256": "01d6ac444b57353c8f8080719ee9c9e2829960a1e6413fc523f29030181b20be"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/01.jpg",
+    "target": "public/choices/01.jpg",
+    "sha256": "5e23fc0e27e076925ea234ebe7e4d6b08850e4d566005cefe907e47188741693"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/02.jpg",
+    "target": "public/choices/02.jpg",
+    "sha256": "b2f8ff23f05a20bba184350170c4fef1c65d84872536174e346a3b3469424cfd"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/03.jpg",
+    "target": "public/choices/03.jpg",
+    "sha256": "981eacb970cc39666717d5e24c1c98d3981e3b5f46d4329cb7154c5456377244"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/04.jpg",
+    "target": "public/choices/04.jpg",
+    "sha256": "0860963706ea511859285761101e12a6ccc87511ca66d713c6824f466f326415"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/05.jpg",
+    "target": "public/choices/05.jpg",
+    "sha256": "6ed7404576c296c0b8a1b54dd44879c6ef74429023ef9bb22e1ee9b3703149d9"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/06.jpg",
+    "target": "public/choices/06.jpg",
+    "sha256": "7617cb20ca7b4b7fae95986db9a9042f3b8b742934cee25fa5fdb8a33bf68fb0"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/07.jpg",
+    "target": "public/choices/07.jpg",
+    "sha256": "2ff4286fe29c1068cf5c395de9d0bd62e9da024d64691d4f0d2b38dfa4683351"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/08.jpg",
+    "target": "public/choices/08.jpg",
+    "sha256": "3b44d799b2e9f69f4ea34f6ace863833882aaa879daa526c5b28c221199d202e"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/09.jpg",
+    "target": "public/choices/09.jpg",
+    "sha256": "ca4d11fab83a50326b99da4f2bfd321b6dd38a5a72d02bda218b2af62c2b6004"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/10.jpg",
+    "target": "public/choices/10.jpg",
+    "sha256": "912026c03f92cb3ee585528c5d1f2aab14f3d28d0663f87569381da428e5d33a"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/11.jpg",
+    "target": "public/choices/11.jpg",
+    "sha256": "b2653558275bee20b5c1a61469630840fa80c1710a5c0a56889978235ae89566"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/12.jpg",
+    "target": "public/choices/12.jpg",
+    "sha256": "661d039295dfead1bb45c2b36a9da00b0d173227bab0bc424b37e0970e1d04cc"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/13.jpg",
+    "target": "public/choices/13.jpg",
+    "sha256": "b526bbe6c983a0d562b528f72e4a1b078717692b4f67a8638a1f28f8b8837c85"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/14.jpg",
+    "target": "public/choices/14.jpg",
+    "sha256": "6625e3854e9610310667613d3e9a22db4c2f7c6ffc8646ea6d7faac38a15192b"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/15.jpg",
+    "target": "public/choices/15.jpg",
+    "sha256": "4033bddfbb8f55b42cfcd34e5c2b3a8e7fa9407efb97558b3f4212030d3ff2ec"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/16.jpg",
+    "target": "public/choices/16.jpg",
+    "sha256": "3a7c61a9b1b09d83fdf18bad4e881793e3849f840b2c816f9f2e314d457492cf"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/17.jpg",
+    "target": "public/choices/17.jpg",
+    "sha256": "f878db197799fb69387e5a3f8ffaed59727af22345b814877d424975cc4deca8"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/18.jpg",
+    "target": "public/choices/18.jpg",
+    "sha256": "26ce77db36cbde55634ed7aae37ae6aab1bce8816fc59b59ae9e21e8b3a10585"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/19.jpg",
+    "target": "public/choices/19.jpg",
+    "sha256": "35421ea02e3191a4df7586389c8df8e6287e8b5799358579898866e065da0fbf"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/output/flux3-klein-characters20-20261102/images/20.jpg",
+    "target": "public/choices/20.jpg",
+    "sha256": "58f8eaa258f00aa1314688b001e3552550a8bdc53cff19c1bc932e7a2b6d2956"
+  },
+  {
+    "source": "/D:/GoogleDrive_Mirror/5. workspace/1_Projects_진행중/20261012_모두의AI라운지/31_2차_플래피버드수업/assets/source-practice.html",
+    "target": "public/original-game.html",
+    "sha256": "a3f5162a39dd5434386cccba39d9ddc912779628b74a58f09da5a8e673089b4a"
+  }
+]

@@ -94,7 +94,13 @@ function gameRuntimeBoot(config){
  const ready=Promise.all(expected.map(async([kind,asset])=>{const image=await loadAsset(kind,asset);images[kind]=image;loaded.add(kind);report();return image;})).then(()=>images);
  ready.catch(error=>fail(error.message));
  window.FlappyLessonImages={images,ready};
- function pageLoaded(){requestAnimationFrame(()=>requestAnimationFrame(()=>{dispatchEvent(new Event('resize'));setTimeout(()=>{pageReady=true;scanDOM();report();},350);}));}
+ function removeLegacyImageSettings(){
+  // Wait until game initialization has bound its controls; keep image loading intact.
+  for(const panel of document.querySelectorAll('.image-settings')){
+   if(panel.querySelector('#birdUrl')&&panel.querySelector('#pipeUrl')&&panel.querySelector('#applyImgBtn')&&panel.textContent.includes('주인공 이미지 URL')&&panel.textContent.includes('아이템 이미지 URL'))panel.remove();
+  }
+ }
+ function pageLoaded(){requestAnimationFrame(()=>requestAnimationFrame(()=>{removeLegacyImageSettings();dispatchEvent(new Event('resize'));setTimeout(()=>{pageReady=true;scanDOM();report();},350);}));}
  if(document.readyState==='complete')pageLoaded();else addEventListener('load',pageLoaded,{once:true});
  if(config.token&&expected.length){const scanTimer=setInterval(()=>{scanDOM();if(drawn.size===expected.length)clearInterval(scanTimer);},500);}
 }
