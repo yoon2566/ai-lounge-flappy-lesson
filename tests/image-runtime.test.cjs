@@ -27,7 +27,7 @@ const server=http.createServer(async(req,res)=>{
   }
   const filename=path.join(root,'dist',url.pathname==='/'?'index.html':decodeURIComponent(url.pathname));
   if(!filename.startsWith(path.join(root,'dist')+path.sep)){res.writeHead(403);return res.end();}
-  res.setHeader('Content-Type',filename.endsWith('.js')?'text/javascript; charset=utf-8':filename.endsWith('.webp')?'image/webp':'text/html; charset=utf-8');res.end(fs.readFileSync(filename));
+  res.setHeader('Content-Type',filename.endsWith('.css')?'text/css':filename.endsWith('.woff2')?'font/woff2':filename.endsWith('.png')?'image/png':filename.endsWith('.js')?'text/javascript; charset=utf-8':filename.endsWith('.webp')?'image/webp':'text/html; charset=utf-8');res.end(fs.readFileSync(filename));
  }catch(error){res.writeHead(500);res.end(error.message);}
 });
 async function run(){
@@ -110,6 +110,16 @@ async function run(){
   });
   await test('런타임 재삽입 중복 없음 / 게시판과 저장 HTML의 실행 코드 동일',async()=>{
    const value=await page.evaluate(html=>{const once=safeGameHTML(html),twice=safeGameHTML(once);return{same:once===twice,count:(twice.match(/id="flappy-game-runtime-v2"/g)||[]).length};},storageGame);assert.deepEqual(value,{same:true,count:1});
+  });
+  await test('분리 배포에서도 저장 수업은 단일 HTML이며 진행 상태 보존',async()=>{
+   await page.evaluate(()=>{state.quizV2.answers.downloadCheck='보존';go(3);});
+   const pending=page.waitForEvent('download');await page.locator('#save-course').click();const downloaded=await pending;const filename=path.join(root,'evidence/loading-saved-course.html');await downloaded.saveAs(filename);
+   const html=fs.readFileSync(filename,'utf8');assert(!html.includes('data-split-assets'));assert(!/<script src=/.test(html));assert(html.includes('data:font/woff2;base64,'));
+   const offline=await context.newPage();await offline.goto('file:///'+filename.replace(/\\/g,'/'));assert.equal(await offline.evaluate(()=>state.quizV2.answers.downloadCheck),'보존');assert.equal(await offline.locator('#page-number').inputValue(),'4');await offline.close();
+  });
+  await test('올빼미·돌기둥 URL 패널 숨김 유지',async()=>{
+   await preview(shell('<canvas id="game"></canvas><div><label>올빼미 이미지 URL<input id="birdUrl" placeholder="https://.../owl.png"></label><label>돌기둥 이미지 URL<input id="pipeUrl" placeholder="https://.../pillar.png"></label></div><input id="nickname"><button id="start">시작</button>'));await page.waitForTimeout(700);
+   const frame=page.frames().find(frame=>frame!==page.mainFrame()&&frame.url()==='about:srcdoc');assert(frame);assert.equal(await frame.locator('#birdUrl').isVisible(),false);assert.equal(await frame.locator('#pipeUrl').isVisible(),false);assert(await frame.locator('#nickname').isVisible());assert(await frame.locator('#start').isVisible());
   });
   console.log(JSON.stringify({passed:results.length,uploadsToLocalFixture:uploads,productionWrites:0,externalRequestsBlocked:blocked.length}));
   fs.mkdirSync(path.join(root,'evidence'),{recursive:true});fs.writeFileSync(path.join(root,'evidence/image-runtime-tests.json'),JSON.stringify({checkedAt:new Date().toISOString(),results,productionWrites:0,requests},null,2));

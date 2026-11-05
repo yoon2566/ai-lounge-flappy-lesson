@@ -10,10 +10,17 @@ async function readBody(request){
   const bytes=new Uint8Array(size);let offset=0;for(const part of chunks){bytes.set(part,offset);offset+=part.length}
   try{return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes))}catch{throw 400}
 }
+function owner(request){return /(?:^|;\s*)flappy_board_owner=([a-f0-9]{64})(?:;|$)/.exec(request.headers.get('Cookie')||'')?.[1]||null;}
+async function ownerId(secret){const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('flappy-board-owner-v1:'+secret));return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('').slice(0,32);}
 export async function handleBoard(request,env){
   if(!env.ARTWORK_DB)return json({error:'게시판 연결을 준비하고 있어요. 잠시 후 다시 열어 주세요.'},503);
   const url=new URL(request.url),path=url.pathname;
   try{
+    if(path==='/api/board/mine'&&request.method==='GET'){
+      if(request.headers.get('Sec-Fetch-Site')==='cross-site')return json({error:'수업 사이트에서 열어 주세요.'},403);
+      let secret=owner(request),extra={};if(!secret){secret=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');extra['Set-Cookie']='flappy_board_owner='+secret+'; Path=/api/board; Max-Age=31536000; HttpOnly; Secure; SameSite=Strict';}
+      const id=await ownerId(secret),item=await env.ARTWORK_DB.prepare(`SELECT ${metadata} FROM works WHERE id=?1`).bind(id).first();return json({item:item||null},200,extra);
+    }
     if(path==='/api/board'&&request.method==='GET'){
       const cursor=url.searchParams.get('cursor');let statement;
       if(cursor){
@@ -34,18 +41,11 @@ export async function handleBoard(request,env){
       const size=new TextEncoder().encode(input.html).byteLength;
       if(size>MAX_HTML_BYTES)return json({error:'게임 파일이 너무 커요. 1.5MB 이하의 HTML을 공유해 주세요.'},413);
       const author=input.author.trim(),title=input.title.trim(),lesson='플래피 이미지 게임';
-      const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([lesson,author,title,input.html])));
-      const id=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('').slice(0,32);
-      const existing=await env.ARTWORK_DB.prepare(`SELECT ${metadata} FROM works WHERE id=?1`).bind(id).first();
-      if(existing)return json({item:existing,duplicate:true},200);
-      const now=Date.now();
-      const result=await env.ARTWORK_DB.prepare('INSERT OR IGNORE INTO works (id,author,title,lesson,html,bytes,created_at) SELECT ?1,?2,?3,?4,?5,?6,?7 WHERE (SELECT COUNT(*) FROM works WHERE created_at>?8)<1000').bind(id,author,title,lesson,input.html,size,now,now-60000).run();
-      if(result.meta.changes===0){
-        const duplicate=await env.ARTWORK_DB.prepare(`SELECT ${metadata} FROM works WHERE id=?1`).bind(id).first();
-        if(duplicate)return json({item:duplicate,duplicate:true});
-        return json({error:'공유 요청이 많아요. 1분 뒤 다시 눌러 주세요.'},429,{'Retry-After':'60'});
-      }
-      return json({item:{id,author,title,lesson,bytes:size,created_at:now}},201);
+      const secret=owner(request);if(!secret)return json({error:'게시 정보를 확인하지 못했어요. 새로고침한 뒤 다시 게시해 주세요.'},409);
+      const id=await ownerId(secret),existing=await env.ARTWORK_DB.prepare(`SELECT ${metadata} FROM works WHERE id=?1`).bind(id).first(),now=Date.now();
+      const result=await env.ARTWORK_DB.prepare('INSERT INTO works (id,author,title,lesson,html,bytes,created_at) SELECT ?1,?2,?3,?4,?5,?6,?7 WHERE EXISTS (SELECT 1 FROM works WHERE id=?1) OR (SELECT COUNT(*) FROM works WHERE created_at>?8)<1000 ON CONFLICT(id) DO UPDATE SET author=excluded.author,title=excluded.title,html=excluded.html,bytes=excluded.bytes').bind(id,author,title,lesson,input.html,size,now,now-60000).run();
+      if(!result.meta.changes)return json({error:'공유 요청이 많아요. 1분 뒤 다시 눌러 주세요.'},429,{'Retry-After':'60'});
+      const item=await env.ARTWORK_DB.prepare(`SELECT ${metadata} FROM works WHERE id=?1`).bind(id).first();return json({item,updated:Boolean(existing)},existing?200:201);
     }
     const match=/^\/api\/board\/([a-f0-9]{32})(\/download)?$/.exec(path);
     if(match&&request.method==='GET'){

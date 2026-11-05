@@ -47,7 +47,7 @@ loadPage(0);const initialWork=new URLSearchParams(location.search).get('work');i
 const HOST=location.origin;
 let uploadHTML='',uploadBusy=false,uploadVersion=0,uploadFrame=null,uploadValid=false;
 function closeUpload(){if(uploadBusy)return;uploadVersion++;uploadHTML='';uploadValid=false;uploadFrame?._gameCleanup?.();uploadFrame=null;$('upload-preview').replaceChildren();$('upload-preview').hidden=true;$('upload-form').reset();$('upload-submit').disabled=true;$('upload-status').textContent='';$('uploader').close();$('upload-open').focus()}
-$('upload-open').addEventListener('click',()=>$('uploader').showModal());
+$('upload-open').addEventListener('click',()=>{$('uploader').showModal();flappyBoardClient.refresh().then(item=>{$('upload-submit').textContent=item?'내 작품 업데이트':'게시하기';}).catch(error=>{$('upload-status').textContent=error.message;});});
 $('upload-close').addEventListener('click',closeUpload);
 $('uploader').addEventListener('cancel',event=>{event.preventDefault();closeUpload()});
 $('upload-file').addEventListener('change',async()=>{
@@ -69,8 +69,8 @@ $('upload-form').addEventListener('submit',async event=>{
  const author=$('upload-author').value.trim(),title=$('upload-name').value.trim();if(!author||!title){$('upload-status').textContent='닉네임과 작품 제목을 입력해 주세요.';return}
  uploadBusy=true;for(const id of ['upload-submit','upload-file','upload-author','upload-name','upload-close'])$(id).disabled=true;$('upload-status').textContent='게시하고 있어요.';
  try{
-  const data=await getJson('/api/board',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({author,title,html:uploadHTML})});
-  uploadBusy=false;closeUpload();cursors.splice(1);await loadPage(0);$('status').textContent=data.duplicate?'이미 게시된 작품이에요.':'작품을 게시했어요.';
+  const data=await flappyBoardClient.save({author,title,html:uploadHTML});
+  uploadBusy=false;closeUpload();cursors.splice(1);await loadPage(0);$('status').textContent=data.updated?'기존 작품을 업데이트했어요.':'작품을 게시했어요. 다음부터는 이 작품을 업데이트합니다.';
  }catch(error){$('upload-status').textContent=error.message}
  finally{uploadBusy=false;for(const id of ['upload-file','upload-author','upload-name','upload-close'])$(id).disabled=false;$('upload-submit').disabled=!uploadHTML||!uploadValid}
 });

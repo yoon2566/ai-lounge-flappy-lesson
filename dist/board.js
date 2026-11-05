@@ -95,9 +95,24 @@ function gameRuntimeBoot(config){
  ready.catch(error=>fail(error.message));
  window.FlappyLessonImages={images,ready};
  function removeLegacyImageSettings(){
-  // Wait until game initialization has bound its controls; keep image loading intact.
-  for(const panel of document.querySelectorAll('.image-settings')){
-   if(panel.querySelector('#birdUrl')&&panel.querySelector('#pipeUrl')&&panel.querySelector('#applyImgBtn')&&panel.textContent.includes('주인공 이미지 URL')&&panel.textContent.includes('아이템 이미지 URL'))panel.remove();
+  // Hide controls after initialization, retaining nodes used by game event handlers.
+  const imageURL=/이미지\s*(?:URL|주소)|(?:image|sprite|background|bird|owl|pipe|pillar|obstacle)[\s_-]*(?:url|URL)|(?:url|URL)[\s_-]*(?:image|sprite|background|bird|owl|pipe|pillar|obstacle)/i;
+  const hide=node=>node.style.setProperty('display','none','important');
+  for(const input of document.querySelectorAll('input:not([type="button"]):not([type="submit"]),textarea')){
+   const labels=[...(input.labels||[])];
+   const hint=[input.id,input.name,input.placeholder,input.getAttribute('aria-label'),...labels.map(n=>n.textContent)].join(' ');
+   let row=input.parentElement;
+   const rowText=row&&row!==document.body&&!row.querySelector('canvas,iframe')&&row.querySelectorAll('input,textarea,select').length===1&&row.textContent.length<500?row.textContent:'';
+   if(!imageURL.test(hint+' '+rowText)&&!(/\.(png|webp|jpe?g|gif|svg)(?:$|[?#])/i.test(input.placeholder||'')&&/https?:/i.test(input.placeholder||'')))continue;
+   hide(input);labels.forEach(hide);
+   // Only hide compact settings containers; never hide game or nickname controls.
+   for(let depth=0;row&&row!==document.body&&depth<3;depth++,row=row.parentElement){
+    if(row.querySelector('canvas,svg,iframe,img')||row.textContent.length>600)break;
+    const fields=[...row.querySelectorAll('input,textarea,select')];
+    if(fields.some(field=>field!==input&&field.style.display!=='none'&&!imageURL.test([field.id,field.name,field.placeholder,...(field.labels||[])].join(' '))&&!/\.(png|webp|jpe?g|gif|svg)/i.test(field.placeholder||'')))break;
+    if([...row.querySelectorAll('button')].some(button=>!/(적용|불러오기|이미지|apply|load)/i.test(button.textContent)))break;
+    if(fields.length&&imageURL.test(row.textContent+' '+hint))hide(row);
+   }
   }
  }
  function pageLoaded(){requestAnimationFrame(()=>requestAnimationFrame(()=>{removeLegacyImageSettings();dispatchEvent(new Event('resize'));setTimeout(()=>{pageReady=true;scanDOM();report();},350);}));}
@@ -134,6 +149,15 @@ function gameStatusText(status){
  if(unseen.length)return '게임을 시작해서 '+unseen.map(kind=>GAME_ASSET_LABELS[kind]).join('·')+' 그림이 나오는지 확인해 주세요.';
  return status.ready?(status.required.length?'그림과 실행 준비를 확인했어요.':'실행 준비를 확인했어요.')+' 게임을 해 본 뒤 다음 단계로 진행하세요.':'게임 실행을 확인하고 있어요…';
 }
+
+// One browser-owned post shared by the lesson and the board upload screen.
+const flappyBoardClient=(()=>{
+ let item=null;
+ async function request(path,options={}){const response=await fetch(path,{credentials:'same-origin',cache:'no-store',...options});const data=await response.json();if(!response.ok)throw Error(data.error||'게시판 연결을 확인해 주세요.');return data;}
+ function lock(run){if(!navigator.locks?.request)return Promise.reject(Error('최신 Chrome 또는 Edge에서 게시해 주세요.'));return navigator.locks.request('flappy-board-session-v1',run);}
+ async function sync(){const data=await request('/api/board/mine');item=data.item;return item;}
+ return {current:()=>item,refresh:()=>lock(sync),save:values=>lock(async()=>{await sync();const data=await request('/api/board',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(values)});item=data.item;return data;})};
+})();
 
 'use strict';
 const $=id=>document.getElementById(id),cursors=[null];let page=0,nextCursor=null,busy=false,viewerRequest=null,returnFocus=null,viewerFrame=null,downloadURL=null;
@@ -184,7 +208,7 @@ loadPage(0);const initialWork=new URLSearchParams(location.search).get('work');i
 const HOST=location.origin;
 let uploadHTML='',uploadBusy=false,uploadVersion=0,uploadFrame=null,uploadValid=false;
 function closeUpload(){if(uploadBusy)return;uploadVersion++;uploadHTML='';uploadValid=false;uploadFrame?._gameCleanup?.();uploadFrame=null;$('upload-preview').replaceChildren();$('upload-preview').hidden=true;$('upload-form').reset();$('upload-submit').disabled=true;$('upload-status').textContent='';$('uploader').close();$('upload-open').focus()}
-$('upload-open').addEventListener('click',()=>$('uploader').showModal());
+$('upload-open').addEventListener('click',()=>{$('uploader').showModal();flappyBoardClient.refresh().then(item=>{$('upload-submit').textContent=item?'내 작품 업데이트':'게시하기';}).catch(error=>{$('upload-status').textContent=error.message;});});
 $('upload-close').addEventListener('click',closeUpload);
 $('uploader').addEventListener('cancel',event=>{event.preventDefault();closeUpload()});
 $('upload-file').addEventListener('change',async()=>{
@@ -206,8 +230,8 @@ $('upload-form').addEventListener('submit',async event=>{
  const author=$('upload-author').value.trim(),title=$('upload-name').value.trim();if(!author||!title){$('upload-status').textContent='닉네임과 작품 제목을 입력해 주세요.';return}
  uploadBusy=true;for(const id of ['upload-submit','upload-file','upload-author','upload-name','upload-close'])$(id).disabled=true;$('upload-status').textContent='게시하고 있어요.';
  try{
-  const data=await getJson('/api/board',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({author,title,html:uploadHTML})});
-  uploadBusy=false;closeUpload();cursors.splice(1);await loadPage(0);$('status').textContent=data.duplicate?'이미 게시된 작품이에요.':'작품을 게시했어요.';
+  const data=await flappyBoardClient.save({author,title,html:uploadHTML});
+  uploadBusy=false;closeUpload();cursors.splice(1);await loadPage(0);$('status').textContent=data.updated?'기존 작품을 업데이트했어요.':'작품을 게시했어요. 다음부터는 이 작품을 업데이트합니다.';
  }catch(error){$('upload-status').textContent=error.message}
  finally{uploadBusy=false;for(const id of ['upload-file','upload-author','upload-name','upload-close'])$(id).disabled=false;$('upload-submit').disabled=!uploadHTML||!uploadValid}
 });

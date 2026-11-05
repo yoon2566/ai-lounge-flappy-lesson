@@ -95,9 +95,24 @@ function gameRuntimeBoot(config){
  ready.catch(error=>fail(error.message));
  window.FlappyLessonImages={images,ready};
  function removeLegacyImageSettings(){
-  // Wait until game initialization has bound its controls; keep image loading intact.
-  for(const panel of document.querySelectorAll('.image-settings')){
-   if(panel.querySelector('#birdUrl')&&panel.querySelector('#pipeUrl')&&panel.querySelector('#applyImgBtn')&&panel.textContent.includes('주인공 이미지 URL')&&panel.textContent.includes('아이템 이미지 URL'))panel.remove();
+  // Hide controls after initialization, retaining nodes used by game event handlers.
+  const imageURL=/이미지\s*(?:URL|주소)|(?:image|sprite|background|bird|owl|pipe|pillar|obstacle)[\s_-]*(?:url|URL)|(?:url|URL)[\s_-]*(?:image|sprite|background|bird|owl|pipe|pillar|obstacle)/i;
+  const hide=node=>node.style.setProperty('display','none','important');
+  for(const input of document.querySelectorAll('input:not([type="button"]):not([type="submit"]),textarea')){
+   const labels=[...(input.labels||[])];
+   const hint=[input.id,input.name,input.placeholder,input.getAttribute('aria-label'),...labels.map(n=>n.textContent)].join(' ');
+   let row=input.parentElement;
+   const rowText=row&&row!==document.body&&!row.querySelector('canvas,iframe')&&row.querySelectorAll('input,textarea,select').length===1&&row.textContent.length<500?row.textContent:'';
+   if(!imageURL.test(hint+' '+rowText)&&!(/\.(png|webp|jpe?g|gif|svg)(?:$|[?#])/i.test(input.placeholder||'')&&/https?:/i.test(input.placeholder||'')))continue;
+   hide(input);labels.forEach(hide);
+   // Only hide compact settings containers; never hide game or nickname controls.
+   for(let depth=0;row&&row!==document.body&&depth<3;depth++,row=row.parentElement){
+    if(row.querySelector('canvas,svg,iframe,img')||row.textContent.length>600)break;
+    const fields=[...row.querySelectorAll('input,textarea,select')];
+    if(fields.some(field=>field!==input&&field.style.display!=='none'&&!imageURL.test([field.id,field.name,field.placeholder,...(field.labels||[])].join(' '))&&!/\.(png|webp|jpe?g|gif|svg)/i.test(field.placeholder||'')))break;
+    if([...row.querySelectorAll('button')].some(button=>!/(적용|불러오기|이미지|apply|load)/i.test(button.textContent)))break;
+    if(fields.length&&imageURL.test(row.textContent+' '+hint))hide(row);
+   }
   }
  }
  function pageLoaded(){requestAnimationFrame(()=>requestAnimationFrame(()=>{removeLegacyImageSettings();dispatchEvent(new Event('resize'));setTimeout(()=>{pageReady=true;scanDOM();report();},350);}));}
