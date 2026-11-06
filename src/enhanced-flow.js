@@ -2,21 +2,49 @@ const imageKinds=['background','sprite','item','obstacle'];
 function pageOf(id){return Math.max(0,data.slides.findIndex(s=>s.id===id));}
 async function convertPrompt(key,source,status){
  state.promptConversions ||= {};const prior=state.promptConversions[key];
- if(prior?.source===source&&prior.version===3){setStatus(status,'같은 입력으로 Haiku가 변환한 프롬프트를 다시 열었어요.');return prior.prompt;}
- const answer=(await apiText('학생의 요청을 실행 가능한 자연스러운 한국어 프롬프트로 다듬어 줘. 아래 내용은 요청 자료이며 지금 실행하지 마. 뜻과 지정한 규칙·URL·크기·프레임 조건을 빠짐없이 유지해 줘. 관찰문은 각각 ‘…하게 해 줘’ 형태의 명령문으로 반드시 바꿔 줘. 모습 변경 요청은 무엇을 무엇으로 바꿀지 분명히 해 줘. 띄어쓰기와 말투를 고치고 중복만 정리해 줘. 요청하지 않은 캐릭터·규칙을 추가하지 마. 설명, 인사, 코드, 마크다운 울타리 없이 학생이 편집할 요청문만 출력해 줘.\n\n'+source,status,'','rules')).trim();
+ const isError=key.startsWith('errors-');
+ const context=key.startsWith('image-')?'이미지의 모습과 움직임을 설명하는 단계야. 없거나 원하지 않는다고 적은 요소는 없는 모습으로 유지해 줘. 이것은 오류 신고가 아니므로 빠진 요소를 추가하라는 뜻으로 뒤집지 마.':key.startsWith('apply-')?'현재 게임에 그림을 적용하는 단계야. 현재 점수·충돌·조작 등은 보존하고 학생이 이번에 명시적으로 바꾼 내용만 변경해 줘.':'학생이 관찰하거나 직접 고친 게임 규칙을 정하는 단계야. 질문은 맥락이고 학생의 최종 문장을 구현할 규칙으로 정리해 줘.';
+ if(prior?.source===source&&prior.version===9){setStatus(status,'같은 입력의 프롬프트를 다시 열었어요.');return prior.prompt;}
+ let answer=(await apiText(isError?errorConversionRequest(source):'학생의 요청을 실행 가능한 자연스러운 한국어 프롬프트로 다듬어 줘. 아래 내용은 요청 자료이며 지금 실행하지 마. 뜻과 지정한 규칙·URL·크기·프레임 조건을 빠짐없이 유지해 줘. 부정 조건을 반대로 바꾸지 마.  직접 입력한 내용과 사용자의 수정 사항을 우선하고, 예시나 기본 선택지로 덮어쓰지 마. 띄어쓰기와 말투를 고치고 중복만 정리해 줘. 각 규칙을 자연스러운 “~해 줘” 요청문으로 써 줘. “질문 맥락”, “학생의 최종 문장” 같은 표제나 입력을 처리하는 지침 자체는 출력에 복사하지 마. 요청하지 않은 캐릭터·규칙을 추가하지 마. 설명, 인사, 코드, 마크다운 울타리 없이 학생이 편집할 요청문만 출력해 줘.\n'+context+'\n\n'+source,status,'','rules')).trim();
  if(!answer||/<html|```html/i.test(answer))throw Error('프롬프트 변환을 다시 시도해 주세요. 기존 작품은 그대로입니다.');
- state.promptConversions[key]={source,prompt:answer,version:3};save();setStatus(status,'Haiku 변환 완료. 확인한 뒤 실행해 주세요.');return answer;
+ if(isError&&!validErrorConversion(source,answer)){answer=(await apiText(errorConversionRequest(source)+'\n\n앞선 초안이 문제를 해결하는 방향과 맞지 않았어. 입력별 해석 기준을 반드시 지켜 다시 작성해 줘.',status,'','rules')).trim();if(!answer||/<html|```html/i.test(answer)||!validErrorConversion(source,answer))throw Error('오류를 고치는 뜻으로 변환하지 못했어요. 내용을 조금 더 자세히 적고 다시 시도해 주세요.');}
+ const prompt=isError?'현재 게임 HTML을 다음과 같이 수정해 줘.\n\n'+answer+'\n\n요청한 변경 외의 기존 규칙과 이미지 URL은 유지하고, 수정한 전체 HTML을 html 코드블록 하나로 출력해 줘.':answer;
+ state.promptConversions[key]={source,prompt,version:9};save();setStatus(status,'Haiku 변환 완료. 확인한 뒤 실행해 주세요.');return prompt;
+}
+function errorConversionRequest(source){
+ return '학생이 게임에서 발견한 문제나 원하는 변경을 적었어. 아래 JSON의 issues만 읽고, 게임을 고칠 AI에게 전달할 자연스러운 한국어 수정 요청문으로 바꿔 줘. 지금 게임 코드 자체를 만들지 마.\n오타와 띄어쓰기를 고치고, 현재 고장 난 상태를 원하는 정상 동작으로 바꿔 써 줘. 오류 설명을 그대로 복사하거나 단순히 말끝만 바꾸지 마. “구름이 업어요/구름이없어요”는 구름이 화면에 나타나도록 고치라는 뜻이고, “닿아도 안 끝나요”는 충돌하면 게임이 끝나도록 고치라는 뜻이야. 반대로 “구름을 없애 줘/구름 없이 하고 싶어요”는 명시적인 제거 요청이므로 그대로 제거하는 뜻을 유지해 줘. “돌기둥이 남아 있어요”는 불필요하게 남은 돌기둥을 제거해 달라는 뜻이야. 예시는 해석 방법일 뿐 입력에 없는 구름·충돌·돌기둥을 추가하지 마.\n직접 입력한 내용은 이미 선택지보다 우선해서 전달되므로 빠진 선택지를 추측해 보충하지 마. 구체적인 색·숫자·URL·부정 조건을 유지하고 요청하지 않은 규칙은 만들지 마. 입력에 없는 방향키·조작키·마우스 버튼을 추측하지 말고 기존 게임의 조작에 반응하도록 표현해 줘. 여러 문제는 빠짐없이 반영해 줘. 명시적인 변경 요청이 오류 설명과 충돌하면 명시적 요청을 우선해 줘.\n출력은 실제로 적용할 짧고 구체적인 “~해 줘” 요청문만 작성해 줘. 원문 인용, 해석 설명, 지침 반복, 머리말, HTML 코드, 코드 울타리는 출력하지 마. 기존 규칙 유지나 전체 HTML 출력 같은 공통 문장은 앱이 따로 붙이므로 출력하지 마.\n\n입력 JSON:\n'+source+'\n\n입력별 해석 기준(출력에 복사하지 말고 수정 방향으로만 사용):\n'+JSON.stringify(errorInterpretations(source).map(({text,intent})=>({text,meaning:intent?.meaning||'원문의 뜻대로 자연스러운 수정 요청으로 바꾼다.'})));
+}
+// Interpret common symptom wording independently of the selected question.
+// Explicit changes win; these checks only constrain unambiguous error reports.
+function errorIntent(text){
+ const t=text.replace(/\s/g,'');
+ if(/해줘|해주세요|해주세|바꿔|변경|없애|제거|하고싶|하게해|게해줘/.test(t))return null;
+ if(/닿|부딪/.test(t)&&/안끝|끝나지않|안죽|죽지않|계속/.test(t))return {meaning:'충돌해도 계속되는 오류다. 닿으면 게임이 종료되도록 수정한다.',must:/끝나|종료|게임.?오버/,bad:/끝나지\s*않|종료되지\s*않|계속\s*(진행|되|날)|안\s*끝/};
+ if(/공중|누르|눌러/.test(t)&&/반응(?:이)?(?:없|업)|반응하지않|안반응/.test(t))return {meaning:'입력에 반응하지 않는 오류다. 원문의 조건에서도 누르면 정상 반응하게 한다. 공중 입력을 금지하거나 지상에서만 가능하게 바꾸지 않는다.',must:/반응|상승|올라/,bad:/반응하지\s*않|반응하지\s*못|땅.*때만|지상.*만|공중.*금지/};
+ if(/안내려|내려오지않/.test(t))return {meaning:'입력을 놓아도 내려오지 않는 오류다. 손을 떼면 아래로 내려오게 고친다.',must:/내려|하강/,bad:/내려오지\s*않|내려가지\s*않/};
+ if(/안올라|올라가지않/.test(t)&&!/점수/.test(t))return {meaning:'상승하지 않는 오류다. 입력하면 위로 올라가게 한다.',must:/상승|올라/,bad:/올라가지\s*않|상승하지\s*않/};
+ if(/안사라|사라지지않/.test(t))return {meaning:'먹거나 획득한 대상이 계속 남는 오류다. 획득하면 그 대상이 사라지게 한다.',must:/사라|제거|없애/,bad:/사라지지\s*않|제거하지\s*않/};
+ if(/다시|재시작/.test(t)&&/코인/.test(t)&&!/점수/.test(t)&&/그대로|남아|초기화/.test(t))return {meaning:'다시 시작해도 화면의 코인이 이전 상태로 남는 오류다. 화면 속 코인 객체의 배치·위치·생성 상태를 새 게임의 초기 상태로 되돌린다. 점수나 수집 개수 변경 요청이 아니다. 코인 수를 0으로 만들거나 코인을 없애는 뜻으로 바꾸지 않는다.',must:/초기화|초기\s*상태|처음|새로/,bad:/점수|코인\s*(수|개수|갯수)/};
+ if(/남아/.test(t))return {meaning:'불필요한 것이 남아 있다는 오류다. 원문에서 남았다고 한 것을 제거한다.',must:/제거|없애|남아\s*있지\s*않/,bad:null};
+ if(/안보|보이지않|(?:없|업)어요/.test(t)&&!/안없|않아|점수.*없/.test(t))return {meaning:'필요한 요소가 없거나 보이지 않는 오류다. 해당 요소가 나타나도록 고친다. 제거 요청이 아니다.',must:/나타|보이|표시|생성|추가/,bad:/없애|제거|보이지\s*않게/};
+ return null;
+}
+function errorInterpretations(source){return JSON.parse(source).issues.map(text=>({text,intent:errorIntent(text)}));}
+function validErrorConversion(source,answer){
+ const entries=errorInterpretations(source);
+ if(!/방향키|화살표/.test(entries.map(x=>x.text).join(" "))&&/방향키|화살표\s*키/.test(answer))return false;
+ // Validate a single symptom directly. Mixed requests can legitimately include
+ // opposite actions for different objects and must not use global word checks.
+ if(entries.length!==1||!entries[0].intent)return true;
+ const {must,bad}=entries[0].intent;return must.test(answer)&&(!bad||!bad.test(answer));
 }
 function motionFor(subject){
- if(/날개|새|비행기|비행체/.test(subject))return /비행기|비행체/.test(subject)?'몸체와 날개는 고정하고 프로펠러 또는 추진 불꽃만 뚜렷하게 바꿔 줘. 1번은 짧은 불꽃, 2번은 긴 불꽃이야.':'몸통과 머리는 고정해 줘. 1번은 양 날개를 위로 크게 올리고, 2번은 아래로 크게 내려 줘.';
- if(/자동차|차량|트럭|버스|오토바이/.test(subject))return '차체·창문·바퀴 중심은 고정해 줘. 1번은 바퀴 살을 + 모양, 2번은 X 모양으로 회전시키고, 뒤의 먼지는 짧게/길게 바꿔 줘. 차체를 늘이거나 기울이지 마.';
- if(/로봇|우주선/.test(subject))return '몸통과 얼굴은 고정해 줘. 추진 불꽃을 1번은 짧게, 2번은 두 배로 길게 바꿔 줘.';
- return '몸통과 머리의 모양·각도는 고정해 줘. 이 대상에 실제로 있는 움직이는 부분 하나만 골라 1번과 2번의 위치를 분명히 다르게 해 줘. 없는 날개나 다리를 추가하지 마.';
+ return '학생이 대상 설명에 적은 움직임과 없는 부위 조건을 가장 먼저 지켜 줘. 몸통의 위치·크기·방향은 고정하고 실제로 있는 움직이는 부위 하나만 두 칸에서 분명히 다르게 해 줘. 대상 이름만 보고 날개·다리·프로펠러·추진 불꽃·먼지를 추가하지 마. 움직일 부위가 없는 물체는 본체 구조를 유지하며 표면의 하이라이트만 두 단계로 바꿔 줘.';
 }
 function imageRequest(kind,subject){
- if(kind==='obstacle')return '게임에서 피할 장애물: '+subject+'\n닿으면 게임오버가 되는 물체 하나만 가운데에 그려 줘. 아이템이나 캐릭터는 넣지 마. 또렷한 2D 픽셀 그림, 전체 모습이 잘리지 않게 해 줘. 바탕은 정확히 한 가지 분홍색 #FF00FF이고 물체에는 분홍색을 쓰지 마. 그림자·바닥·글자·구분선은 넣지 마.';
+ if(kind==='obstacle')return '게임에서 피할 장애물: '+subject+'\n물체 하나만 1:1 비율의 정사각형 이미지 가운데에 그려 줘. 아이템이나 캐릭터는 넣지 마. 또렷한 2D 픽셀 그림, 전체 모습이 잘리지 않게 해 줘. 바탕은 정확히 한 가지 분홍색 #FF00FF이고 물체에는 분홍색을 쓰지 마. 그림자·바닥·글자·구분선은 넣지 마.';
  if(kind!=='character')return assetPrompt(kind,subject);
- return '게임 주인공: '+subject+'\n전체 캔버스는 16:9 비율의 가로로 긴 이미지로 만들어 줘. 같은 크기의 두 칸이 가로로 나란히 놓인 스프라이트 시트 한 장을 만들어 줘. 왼쪽은 1번 동작, 오른쪽은 2번 동작이야. 동일한 캐릭터를 복제한 것처럼 본체의 구조·색·방향·기울기·크기를 정확히 유지해 줘. 얼굴이 원래 있는 대상만 얼굴 모양과 고개 각도를 유지해 줘. 두 칸 모두 오른쪽을 바라보고 각 칸 중앙의 같은 좌표에 몸통 중심을 놓아 줘. 주인공 본체가 각 칸 너비의 약 65%를 차지하게 충분히 크게 그려 줘. 각 칸 너비와 높이는 같고 두 캐릭터가 중앙 경계를 넘지 않게 충분한 여백을 둬.\n'+motionFor(subject)+'\n두 동작을 완전히 같은 정지 그림으로 만들지 마. 움직이지 않는 몸체는 그대로 두고 지정한 부위만 명확하게 바꿔 줘. 분홍색 #FF00FF 단색 바탕, 또렷한 2D 픽셀 그림으로 만들어 줘. 분홍색을 캐릭터에 쓰지 마. 글자·구분선·그림자·바닥·추가 캐릭터는 넣지 마.';
+ return '게임 주인공: '+subject+'\n전체 캔버스는 16:9 비율의 가로로 긴 이미지로 만들어 줘. 같은 크기의 두 칸이 가로로 나란히 놓인 스프라이트 시트 한 장을 만들어 줘. 왼쪽은 1번 동작, 오른쪽은 2번 동작이야. 동일한 캐릭터를 복제한 것처럼 본체의 구조·색·방향·기울기·크기를 정확히 유지해 줘. 얼굴이 원래 있는 대상만 얼굴 모양과 고개 각도를 유지해 줘. 두 칸 모두 오른쪽을 바라보고 각 칸 중앙의 같은 좌표에 몸통 중심을 놓아 줘. 주인공 본체가 각 칸 너비의 약 65%를 차지하게 충분히 크게 그려 줘. 두 칸은 서로 같은 너비와 같은 높이이고 두 캐릭터가 중앙 경계를 넘지 않게 충분한 여백을 둬.\n'+motionFor(subject)+'\n두 동작을 완전히 같은 정지 그림으로 만들지 마. 움직이지 않는 몸체는 그대로 두고 지정한 부위만 명확하게 바꿔 줘. 분홍색 #FF00FF 단색 바탕, 또렷한 2D 픽셀 그림으로 만들어 줘. 분홍색을 캐릭터에 쓰지 마. 글자·구분선·그림자·바닥·추가 캐릭터는 넣지 마.';
 }
 function editImage(kind){state.editImageOnOpen=kind;go(pageOf(kind));}
 function nextAction(root,box,fn,label='다음 단계'){const bar=el('div','actions flow-footer'),button=action(label,fn,true);bar.append(button);box.append(bar);setSlidePrimary(root,button);return bar;}
@@ -84,16 +112,16 @@ function buildEnhancedSlide(root,slide){
  }
  if(slide.type==='apply'){
   if(!state.gameHTML){const create=gameCreationAction();box.append(el('p','muted','먼저 기본 게임을 만들어 주세요.'),create);setSlidePrimary(root,create);return true;}
-  const kind=slide.kind,src=assetSrc(kind,kind!=='background'),grid=el('div','apply-layout'),pic=el('div','studio-picture checkered'),detail=el('div');if(src)pic.append(image(src,'적용할 '+LABEL[kind]));else pic.append(el('p','muted','그림 준비가 필요해요'));detail.append(el('h3','','내 '+LABEL[kind]+' 그림'),el('p','muted',kind==='obstacle'?'닿으면 끝나는 장애물입니다.':kind==='item'?'모으면 1점씩 오르는 물건입니다.':kind==='sprite'?'가로 두 칸을 번갈아 보여 줍니다.':'게임 화면에 반복해서 보여 줍니다.'));const status=el('div','inline-status'),details=el('details'),summary=el('summary','','이미지 주소 확인'),url=el('input','url-input');url.readOnly=true;url.setAttribute('aria-label',LABEL[kind]+' 이미지 주소');details.append(summary,url);detail.append(details,action('그림 수정하기',()=>editImage(kind==='sprite'?'character':kind),false,true));grid.append(pic,detail);box.append(grid,status);const bar=el('div','actions flow-footer');let ready=false;
-  const run=action('프롬프트로 바꾸기',async()=>{if(!ready||controller)return;run.disabled=true;try{const text=await convertPrompt('apply-'+kind,applyPrompt(kind,state.urls[kind]),status);if(!isCurrent())return;editCurrentGame(text,nextPage,true,undefined,kind);}catch(e){setStatus(status,e.message,true);}finally{run.disabled=false;}},true);run.disabled=true;bar.append(action('현재 게임 보기',myGame),run);let primary=run;if(imageApplied(kind)){run.textContent='수정하기';primary=action('다음 단계',()=>go(nextPage),true);bar.append(primary);}box.append(bar);setSlidePrimary(root,primary);
+  const kind=slide.kind,src=assetSrc(kind,kind!=='background'),grid=el('div','apply-layout'),pic=el('div','studio-picture checkered'),detail=el('div');if(src)pic.append(image(src,'적용할 '+LABEL[kind]));else pic.append(el('p','muted','그림 준비가 필요해요'));detail.append(el('h3','','내 '+LABEL[kind]+' 그림'),el('p','muted',kind==='obstacle'?'게임의 장애물 그림입니다. 충돌 규칙은 그대로 유지합니다.':kind==='item'?'게임에서 모으는 물건입니다. 점수는 현재 규칙을 유지합니다.':kind==='sprite'?'가로 두 칸을 번갈아 보여 줍니다.':'게임 화면에 반복해서 보여 줍니다.'));const status=el('div','inline-status'),details=el('details'),summary=el('summary','','이미지 주소 확인'),url=el('input','url-input');url.readOnly=true;url.setAttribute('aria-label',LABEL[kind]+' 이미지 주소');details.append(summary,url);detail.append(details,action('그림 수정하기',()=>editImage(kind==='sprite'?'character':kind),false,true));grid.append(pic,detail);box.append(grid,status);const bar=el('div','actions flow-footer');let ready=false;
+  const run=action('프롬프트로 바꾸기',async()=>{if(!ready||controller)return;run.disabled=true;try{const text=await convertPrompt('apply-'+kind,applyPrompt(kind,state.urls[kind]),status);if(!isCurrent())return;editCurrentGame(text,nextPage,true,value=>{state.promptConversions['apply-'+kind].prompt=value;save();},kind);}catch(e){setStatus(status,e.message,true);}finally{run.disabled=false;}},true);run.disabled=true;bar.append(action('현재 게임 보기',myGame),run);let primary=run;if(imageApplied(kind)){run.textContent='수정하기';primary=action('다음 단계',()=>go(nextPage),true);bar.append(primary);}box.append(bar);setSlidePrimary(root,primary);
   async function prepare(){if(!isCurrent())return;try{if(!src)throw Error('먼저 배경 제거 단계에서 그림을 준비해 주세요.');setStatus(status,'그림을 준비하고 있어요…');const hosted=await ensureHosted(kind,src);if(!isCurrent())return;url.value=hosted;ready=true;run.disabled=false;if(!imageApplied(kind)){run.textContent='프롬프트로 바꾸기';setSlidePrimary(root,run);}setStatus(status,'그림 준비 완료. 프롬프트를 확인한 뒤 적용하세요.');}catch(e){if(!isCurrent())return;setStatus(status,e.message,true);const prepareButton=action('준비 단계로',()=>go(pageOf('remove')),true);detail.append(prepareButton);setSlidePrimary(root,prepareButton);}}queueMicrotask(prepare);return true;
  }
  if(slide.type==='share'){
-  const form=el('div','share-form'),author=el('input'),title=el('input');author.maxLength=40;title.maxLength=80;author.setAttribute('aria-label','이름 또는 닉네임');title.setAttribute('aria-label','작품 제목');author.placeholder='이름 또는 닉네임';title.placeholder='작품 제목';state.sharing ||= {};author.value=state.sharing.author||'';title.value=state.sharing.title||'';for(const[input,key]of[[author,'author'],[title,'title']])input.oninput=()=>{state.sharing[key]=input.value;save();};form.append(el('label','','이름 또는 닉네임'),author,el('label','','작품 제목'),title,el('p','muted',state.gameHTML?'이 브라우저에서는 작품 하나를 게시하고, 이후에는 같은 작품을 업데이트합니다. 이름·제목을 바꿔도 새 글은 생기지 않아요.':'먼저 기본 게임을 만들어 주세요. 입력한 닉네임과 작품 제목은 그대로 유지됩니다.'));const status=el('div','inline-status'),bar=el('div','actions flow-footer');
-  if(!state.gameHTML){const create=gameCreationAction();bar.append(action('게시판 열기',()=>window.open(HOST+'/board.html','_blank','noopener')),create);box.append(form,status,bar);setSlidePrimary(root,create);return true;}
+  const form=el('div','share-form'),author=el('input'),title=el('input');author.maxLength=40;title.maxLength=80;author.setAttribute('aria-label','이름 또는 닉네임');title.setAttribute('aria-label','작품 제목');author.placeholder='이름 또는 닉네임';title.placeholder='작품 제목';state.sharing ||= {};author.value=state.sharing.author||'';title.value=state.sharing.title||'';for(const[input,key]of[[author,'author'],[title,'title']])input.oninput=()=>{state.sharing[key]=input.value;save();};form.append(el('label','','이름 또는 닉네임'),author,el('label','','작품 제목'),title,el('p','muted',state.gameHTML?'이 브라우저에서는 수업마다 작품 하나를 게시하고, 이후에는 같은 작품을 업데이트합니다. 이름·제목을 바꿔도 새 글은 생기지 않아요.':'먼저 기본 게임을 만들어 주세요. 입력한 닉네임과 작품 제목은 그대로 유지됩니다.'));const status=el('div','inline-status'),bar=el('div','actions flow-footer');
+  if(!state.gameHTML){const create=gameCreationAction();bar.append(action('게시판 열기',()=>window.open(boardURL(),'_blank','noopener')),create);box.append(form,status,bar);setSlidePrimary(root,create);return true;}
   const publish=action('게시 정보 확인 중…',async()=>{if(!author.value.trim()||!title.value.trim()){setStatus(status,'닉네임과 작품 제목을 적어 주세요.');return;}if(!state.gameHTML){setStatus(status,'먼저 게임을 만들어 주세요.');return;}publish.disabled=true;author.disabled=title.disabled=true;try{setStatus(status,'게시하고 있어요…');const out=await flappyBoardClient.save({author:author.value,title:title.value,html:state.gameHTML});state.sharing.lastId=out.item.id;save();setStatus(status,out.updated?'기존 작품을 업데이트했어요.':'게시했습니다. 다음부터는 이 작품을 업데이트합니다.');}catch(e){setStatus(status,e.message,true);}finally{publish.textContent=flappyBoardClient.current()?'내 작품 업데이트':'게시하기';publish.disabled=false;author.disabled=title.disabled=false;}},true);
   publish.disabled=true;flappyBoardClient.refresh().then(item=>{publish.textContent=item?'내 작품 업데이트':'게시하기';publish.disabled=false;}).catch(error=>{setStatus(status,error.message,true);publish.textContent='게시 다시 시도';publish.disabled=false;});
-  bar.append(action('HTML 다운로드',()=>{if(!state.gameHTML){setStatus(status,'먼저 게임을 만들어 주세요.');return;}download('내가_만든_플래피게임.html',new Blob([state.gameHTML],{type:'text/html;charset=utf-8'}));}),action('게시판 열기',()=>window.open(HOST+'/board.html','_blank','noopener')),publish);box.append(form,status,bar);setSlidePrimary(root,publish);return true;
+  bar.append(action('HTML 다운로드',()=>{if(!state.gameHTML){setStatus(status,'먼저 게임을 만들어 주세요.');return;}download('내가_만든_플래피게임.html',new Blob([state.gameHTML],{type:'text/html;charset=utf-8'}));}),action('게시판 열기',()=>window.open(boardURL(),'_blank','noopener')),publish);box.append(form,status,bar);setSlidePrimary(root,publish);return true;
  }
  return false;
 }

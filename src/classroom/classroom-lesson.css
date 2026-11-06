@@ -1,0 +1,38 @@
+.lesson-frame{position:relative}
+.with-classroom .classroom-banner{position:static;transform:none;max-width:none;flex:1;min-width:0;border:0;border-radius:0;padding:0;background:transparent;box-shadow:none;font-size:13px;font-weight:650;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.classroom-header{position:fixed;left:0;right:0;top:0;z-index:20;display:flex;align-items:center;gap:14px;height:48px;padding:0 22px;background:#f7eee3;border-bottom:1px solid #e0cbb5;font-size:12px;font-family:inherit}
+.classroom-back{color:#7d624e;text-decoration:none;flex:none}
+.classroom-role{border-radius:5px;padding:4px 7px;background:#f3e5d5;color:#513a2b;flex:none;font-size:11px}
+.classroom-header button{min-height:31px;padding:5px 10px;border:1px solid #e0cbb5;border-radius:6px;background:#fffaf3;font-size:11px;color:#8b5c3a;text-decoration:none;white-space:nowrap}
+.with-classroom .stage{padding-top:60px}
+.with-classroom .slide-wrap{width:min(1280px,calc(100vw - 40px),calc((100dvh - 160px)*16/9))}
+.classroom-teacher .stage{padding-top:104px}
+.classroom-teacher .slide-wrap{width:min(1280px,calc(100vw - 40px),calc((100dvh - 206px)*16/9))}
+.classroom-lock-controls{position:absolute;right:0;bottom:calc(100% + 12px);z-index:8;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.classroom-lock-label{font-size:12px;color:#7d624e;margin-right:2px}
+.classroom-lock-button{min-height:34px;padding:6px 13px;border:1px solid #e0cbb5;border-radius:7px;background:#f7eee3;color:#7d624e;font-size:13px;font-weight:750;box-shadow:0 2px 8px #3b291f08}
+.classroom-page-lock.is-open,.classroom-open-all{border-color:#cbb096;background:#f3e5d5;color:#8b5c3a}
+.classroom-lock-all{margin-left:4px;border-color:#cbb096;background:#fffaf3;color:#8b5c3a}
+.classroom-lock-button:hover:enabled{filter:brightness(.96)}
+.classroom-lock-button:disabled{opacity:.45}
+.classroom-waiting-panel{position:absolute;inset:0;z-index:7;background:var(--paper);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;text-align:center;padding:30px;color:#7d624e}
+.classroom-waiting-panel strong{font-size:clamp(20px,3vw,36px);letter-spacing:-1px}
+.classroom-waiting-panel span{font-size:clamp(13px,1.7vw,20px)}
+.classroom-waiting #slide-content,.classroom-waiting #cover-start,.classroom-waiting #slide-next{visibility:hidden}
+@media(max-width:650px){
+  .classroom-header{padding:0 10px;gap:8px}
+  .classroom-header .classroom-banner{font-size:11px}
+  .classroom-role{display:none}
+  .classroom-header button{font-size:10px;padding:4px 6px}
+  .classroom-back{font-size:11px}
+  .classroom-lock-controls{bottom:calc(100% + 9px);gap:6px}
+  .classroom-lock-label{font-size:11px}
+  .classroom-lock-button{min-height:30px;font-size:11px;padding:5px 10px}
+  .with-classroom .slide-wrap{width:min(calc(100vw - 20px),calc((100dvh - 154px)*16/9))}
+  .classroom-teacher .stage{padding-top:98px}
+  .classroom-teacher .slide-wrap{width:min(calc(100vw - 20px),calc((100dvh - 200px)*16/9))}
+}
+@media print{.classroom-header,.classroom-lock-controls,.classroom-waiting-panel{display:none!important}}
+
+.classroom-header[hidden],.classroom-lock-controls[hidden],.classroom-waiting-panel[hidden]{display:none}.classroom-lock-controls{position:fixed;top:54px;right:20px;bottom:auto;z-index:30}.classroom-header a{font-size:12px;color:#513a2b}.classroom-waiting-panel{z-index:10}
+

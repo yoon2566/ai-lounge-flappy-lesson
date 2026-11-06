@@ -8,8 +8,18 @@
     "binding": "ASSETS",
     "run_worker_first": [
       "/api/*",
-      "/images/*"
-    ]
+      "/images/*",
+      "/",
+      "/index.html",
+      "/classes",
+      "/teacher",
+      "/lesson",
+      "/lesson.html",
+      "/board",
+      "/board.html"
+    ],
+    "html_handling": "none",
+    "not_found_handling": "none"
   },
   "kv_namespaces": [
     {
@@ -28,6 +38,11 @@
       "binding": "ARTWORK_DB",
       "database_name": "flappy-artwork-board-20261026",
       "database_id": "b4bd34ae-e2f1-4d92-ad14-a4e81f281c09"
+    },
+    {
+      "binding": "CLASSROOM_DB",
+      "database_name": "flappy-classrooms-20261106",
+      "database_id": "8d9195fb-00e4-4c45-a400-beac7808d2a8"
     }
   ],
   "workers_dev": true,
@@ -36,5 +51,25 @@
       "binding": "LESSON_IMAGE_BUCKET",
       "bucket_name": "ai-lounge-lesson-images"
     }
-  ]
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CLASSROOM_EVENTS",
+        "class_name": "ClassroomEvents"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "flappy-classroom-events-v1",
+      "new_sqlite_classes": [
+        "ClassroomEvents"
+      ]
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
 }

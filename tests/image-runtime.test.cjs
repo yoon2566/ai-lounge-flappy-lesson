@@ -25,7 +25,7 @@ const server=http.createServer(async(req,res)=>{
    if(url.pathname.startsWith('/api/board/'))return res.end(JSON.stringify({item:{id:'a'.repeat(32),title:'검사용 게임',author:'테스트',created_at:1,html:boardGame}}));
    return res.end(JSON.stringify({entries:[],ok:true}));
   }
-  const filename=path.join(root,'dist',url.pathname==='/'?'index.html':decodeURIComponent(url.pathname));
+  const filename=path.join(root,'dist',url.pathname==='/'?'lesson.html':decodeURIComponent(url.pathname));
   if(!filename.startsWith(path.join(root,'dist')+path.sep)){res.writeHead(403);return res.end();}
   res.setHeader('Content-Type',filename.endsWith('.css')?'text/css':filename.endsWith('.woff2')?'font/woff2':filename.endsWith('.png')?'image/png':filename.endsWith('.js')?'text/javascript; charset=utf-8':filename.endsWith('.webp')?'image/webp':'text/html; charset=utf-8');res.end(fs.readFileSync(filename));
  }catch(error){res.writeHead(500);res.end(error.message);}
@@ -120,6 +120,20 @@ async function run(){
   await test('올빼미·돌기둥 URL 패널 숨김 유지',async()=>{
    await preview(shell('<canvas id="game"></canvas><div><label>올빼미 이미지 URL<input id="birdUrl" placeholder="https://.../owl.png"></label><label>돌기둥 이미지 URL<input id="pipeUrl" placeholder="https://.../pillar.png"></label></div><input id="nickname"><button id="start">시작</button>'));await page.waitForTimeout(700);
    const frame=page.frames().find(frame=>frame!==page.mainFrame()&&frame.url()==='about:srcdoc');assert(frame);assert.equal(await frame.locator('#birdUrl').isVisible(),false);assert.equal(await frame.locator('#pipeUrl').isVisible(),false);assert(await frame.locator('#nickname').isVisible());assert(await frame.locator('#start').isVisible());
+  });
+  await test('이미지 적용·기본 도형·안내문 전체 숨김, 게임과 재시작 유지',async()=>{
+   await preview(shell('<main><canvas id="game" width="300" height="200"></canvas><button id="restart">다시 시작</button><p id="score">점수: 0</p><section id="settings"><div><label>올빼미 이미지 URL<input id="birdUrl" value="https://example.com/owl.png"></label></div><div><button id="apply">이미지 적용</button><button id="defaults">기본 도형</button></div><p>비워두면 도형으로 그려집니다. 이미지 URL을 적용하면 해당 그림이 사용됩니다.</p></section></main><script>const field=document.getElementById("birdUrl");document.getElementById("apply").onclick=()=>field.value;document.getElementById("defaults").onclick=()=>field.value="";document.getElementById("restart").onclick=()=>document.getElementById("score").textContent="재시작 성공";</script>'));
+   const f=page.frameLocator('iframe.error-game-frame');await f.locator('#settings').waitFor({state:'hidden'});assert(await f.locator('#game').isVisible());assert(await f.locator('#restart').isVisible());assert.equal(await f.locator('#birdUrl').inputValue(),'https://example.com/owl.png');assert.equal(await f.locator('#apply').count(),1);await f.locator('#restart').click();assert.equal(await f.locator('#score').innerText(),'재시작 성공');await page.waitForFunction(()=>!document.querySelector('.error-actions .quiz-primary').disabled);
+  });
+  await test('입력칸 없는 버튼·늦게 추가되는 이미지 설정 숨김, 닉네임 유지',async()=>{
+   await preview(shell('<canvas id="game"></canvas><div id="mixed"><input id="nickname" placeholder="닉네임"><button id="start">시작</button><button id="apply">이미지 적용</button><button id="defaults">기본 도형</button><p id="hint">비워두면 도형으로 그려집니다. 이미지 URL을 적용하면 해당 그림이 사용됩니다.</p></div>'));
+   const f=page.frameLocator('iframe.error-game-frame');await f.locator('#apply').waitFor({state:'hidden'});assert.equal(await f.locator('#defaults').isVisible(),false);assert.equal(await f.locator('#hint').isVisible(),false);assert(await f.locator('#nickname').isVisible());assert(await f.locator('#start').isVisible());
+   await f.locator('#mixed').evaluate(node=>{const group=document.createElement('div');group.id='late';group.innerHTML='<button>이미지 적용</button><button>기본 도형</button>';node.append(group)});await f.locator('#late').waitFor({state:'hidden'});
+   await f.locator('#apply').evaluate(node=>node.style.display='block');assert.equal(await f.locator('#apply').isVisible(),false);
+  });
+  await test('저장한 독립 HTML에서도 이미지 설정 숨김과 재시작 동작',async()=>{
+   const html=await page.evaluate(()=>safeGameHTML('<html><body><canvas></canvas><div id="settings"><button>이미지 적용</button><button>기본 도형</button><p>비워두면 도형으로 그려집니다.</p></div><button id="restart" onclick="this.textContent=\'재시작 성공\'">다시 시작</button></body></html>'));
+   const filename=path.join(root,'evidence/image-settings-download.html');fs.writeFileSync(filename,html);const offline=await context.newPage();await offline.goto('file:///'+filename.replace(/\\/g,'/'));await offline.locator('#settings').waitFor({state:'hidden'});assert(await offline.locator('canvas').isVisible());await offline.locator('#restart').click();assert.equal(await offline.locator('#restart').innerText(),'재시작 성공');await offline.close();
   });
   console.log(JSON.stringify({passed:results.length,uploadsToLocalFixture:uploads,productionWrites:0,externalRequestsBlocked:blocked.length}));
   fs.mkdirSync(path.join(root,'evidence'),{recursive:true});fs.writeFileSync(path.join(root,'evidence/image-runtime-tests.json'),JSON.stringify({checkedAt:new Date().toISOString(),results,productionWrites:0,requests},null,2));

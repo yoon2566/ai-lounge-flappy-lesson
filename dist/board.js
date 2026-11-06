@@ -97,12 +97,17 @@ function gameRuntimeBoot(config){
  function removeLegacyImageSettings(){
   // Hide controls after initialization, retaining nodes used by game event handlers.
   const imageURL=/이미지\s*(?:URL|주소)|(?:image|sprite|background|bird|owl|pipe|pillar|obstacle)[\s_-]*(?:url|URL)|(?:url|URL)[\s_-]*(?:image|sprite|background|bird|owl|pipe|pillar|obstacle)/i;
-  const hide=node=>node.style.setProperty('display','none','important');
+  const imageAction=/^(?:(?:이미지|그림)\s*(?:적용|불러오기|초기화|삭제)|(?:apply|load|reset)\s*images?)\s*$/i;
+  const defaultAction=/^(?:기본\s*도형(?:으로(?:\s*(?:돌아가기|되돌리기))?)?|(?:use\s*)?default\s*shapes?)\s*$/i;
+  const imageNote=/(?:비워\s*두면|비우면).*(?:도형|이미지)|이미지\s*(?:URL|주소).*(?:적용하면|입력하면).*(?:그림|이미지)/i;
+  const hidden=new Set();
+  const hide=node=>{node.setAttribute('data-flappy-image-settings','');if(node.style.getPropertyValue('display')!=='none'||node.style.getPropertyPriority('display')!=='important')node.style.setProperty('display','none','important');hidden.add(node);};
+  if(!document.getElementById('flappy-image-settings-style')){const style=document.createElement('style');style.id='flappy-image-settings-style';style.textContent='[data-flappy-image-settings]{display:none!important}';(document.head||document.documentElement).append(style);}
   for(const input of document.querySelectorAll('input:not([type="button"]):not([type="submit"]),textarea')){
    const labels=[...(input.labels||[])];
    const hint=[input.id,input.name,input.placeholder,input.getAttribute('aria-label'),...labels.map(n=>n.textContent)].join(' ');
    let row=input.parentElement;
-   const rowText=row&&row!==document.body&&!row.querySelector('canvas,iframe')&&row.querySelectorAll('input,textarea,select').length===1&&row.textContent.length<500?row.textContent:'';
+   const rowText=row&&row!==document.body&&!row.querySelector('canvas,iframe,button,[role="button"],a')&&row.querySelectorAll('input,textarea,select').length===1&&row.textContent.length<200?row.textContent:'';
    if(!imageURL.test(hint+' '+rowText)&&!(/\.(png|webp|jpe?g|gif|svg)(?:$|[?#])/i.test(input.placeholder||'')&&/https?:/i.test(input.placeholder||'')))continue;
    hide(input);labels.forEach(hide);
    // Only hide compact settings containers; never hide game or nickname controls.
@@ -110,12 +115,32 @@ function gameRuntimeBoot(config){
     if(row.querySelector('canvas,svg,iframe,img')||row.textContent.length>600)break;
     const fields=[...row.querySelectorAll('input,textarea,select')];
     if(fields.some(field=>field!==input&&field.style.display!=='none'&&!imageURL.test([field.id,field.name,field.placeholder,...(field.labels||[])].join(' '))&&!/\.(png|webp|jpe?g|gif|svg)/i.test(field.placeholder||'')))break;
-    if([...row.querySelectorAll('button')].some(button=>!/(적용|불러오기|이미지|apply|load)/i.test(button.textContent)))break;
+    if([...row.querySelectorAll('button')].some(button=>!/(적용|불러오기|이미지|apply|load)/i.test(button.textContent)&&!defaultAction.test(button.textContent.trim())))break;
     if(fields.length&&imageURL.test(row.textContent+' '+hint))hide(row);
    }
   }
+  // Some generated games place the action row and help text outside the URL
+  // field wrappers, or recreate them after restart. Hide those independently.
+  for(const button of document.querySelectorAll('button,input[type="button"],input[type="submit"],[role="button"]')){
+   const text=(button.textContent||button.value||'').trim();
+   const panel=button.parentElement;
+   const context=panel?.textContent||'';
+   const nearbyImageSettings=imageURL.test(context)||imageNote.test(context)||[...(panel?.querySelectorAll('button,input[type="button"],input[type="submit"]')||[])].some(other=>imageAction.test((other.textContent||other.value||'').trim()));
+   if(imageAction.test(text)||defaultAction.test(text)&&nearbyImageSettings)hide(button);
+  }
+  for(const note of document.querySelectorAll('p,small,label,span,div')){
+   if(note.textContent.length<400&&imageNote.test(note.textContent)&&!note.querySelector('canvas,iframe,img,svg,button,input,textarea,select,a'))hide(note);
+  }
+  for(const node of hidden){
+   for(let row=node.parentElement,depth=0;row&&row!==document.body&&depth<3;row=row.parentElement,depth++){
+    if(row.querySelector('canvas,iframe,img,svg,video')||row.textContent.length>800)break;
+    const controls=[...row.querySelectorAll('button,input,textarea,select,a,[role="button"]')];
+    if(!controls.length||controls.some(control=>!control.hasAttribute('data-flappy-image-settings')))break;
+    hide(row);
+   }
+  }
  }
- function pageLoaded(){requestAnimationFrame(()=>requestAnimationFrame(()=>{removeLegacyImageSettings();dispatchEvent(new Event('resize'));setTimeout(()=>{pageReady=true;scanDOM();report();},350);}));}
+ function pageLoaded(){requestAnimationFrame(()=>requestAnimationFrame(()=>{removeLegacyImageSettings();let pending=false;new MutationObserver(()=>{if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;removeLegacyImageSettings();});}).observe(document.body,{childList:true,subtree:true,characterData:true});dispatchEvent(new Event('resize'));setTimeout(()=>{pageReady=true;scanDOM();report();},350);}));}
  if(document.readyState==='complete')pageLoaded();else addEventListener('load',pageLoaded,{once:true});
  if(config.token&&expected.length){const scanTimer=setInterval(()=>{scanDOM();if(drawn.size===expected.length)clearInterval(scanTimer);},500);}
 }
@@ -156,7 +181,7 @@ const flappyBoardClient=(()=>{
  async function request(path,options={}){const response=await fetch(path,{credentials:'same-origin',cache:'no-store',...options});const data=await response.json();if(!response.ok)throw Error(data.error||'게시판 연결을 확인해 주세요.');return data;}
  function lock(run){if(!navigator.locks?.request)return Promise.reject(Error('최신 Chrome 또는 Edge에서 게시해 주세요.'));return navigator.locks.request('flappy-board-session-v1',run);}
  async function sync(){const data=await request('/api/board/mine');item=data.item;return item;}
- return {current:()=>item,refresh:()=>lock(sync),save:values=>lock(async()=>{await sync();const data=await request('/api/board',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(values)});item=data.item;return data;})};
+ return {current:()=>window.classroomWorkClient?.enabled?window.classroomWorkClient.current():item,refresh:()=>window.classroomWorkClient?.enabled?Promise.resolve(window.classroomWorkClient.current()):lock(sync),save:values=>window.classroomWorkClient?.enabled?window.classroomWorkClient.save(values.title,values.html,{author:values.author}):lock(async()=>{await sync();const data=await request('/api/board',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(values)});item=data.item;return data;})};
 })();
 
 'use strict';

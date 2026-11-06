@@ -1,4 +1,4 @@
-import {SYSTEM} from './ai-system.mjs';
+import {SYSTEM, PROMPT_SYSTEM} from './ai-system.mjs';
 import {generateImage} from './image-generation.mjs';
 
 export const CHAT_MODEL='anthropic/claude-haiku-5.5';
@@ -15,7 +15,7 @@ export async function generateLesson(body,env,signal){
     const response=await fetch('https://openrouter.ai/api/v1/chat/completions',{
       method:'POST',signal,
       headers:{Authorization:'Bearer '+env.SHERPA_OPENROUTER_KEY,'Content-Type':'application/json','X-Title':'AI Sherpa Flappy'},
-      body:JSON.stringify({model:CHAT_MODEL,messages:[{role:'system',content:SYSTEM},...body.messages],reasoning:{enabled:false,effort:'high',exclude:true},provider:{sort:'throughput',allow_fallbacks:true},max_tokens:128000,stream:true,stream_options:{include_usage:true}})
+      body:JSON.stringify({model:CHAT_MODEL,messages:[{role:'system',content:body.purpose==='rules'?PROMPT_SYSTEM:SYSTEM},...body.messages],reasoning:{enabled:false,effort:'high',exclude:true},provider:{sort:'throughput',allow_fallbacks:true},max_tokens:body.purpose==='rules'?8000:128000,stream:true,stream_options:{include_usage:true}})
     });
     if(!response.ok){
       await response.body?.cancel();

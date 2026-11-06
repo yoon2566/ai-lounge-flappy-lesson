@@ -2,10 +2,11 @@ export const IMAGE_MODEL='recraft/recraft-v4.1-flash';
 export const IMAGE_PRICE_USD=0.007;
 
 export function imageAspectRatio(prompt){
- const explicit=prompt.match(/(?:^|[^\d])(16:9|9:16|4:3|3:4|1:1)(?:[^\d]|$)/);
- if(explicit)return explicit[1];
- if(/세로|수직|portrait|vertical/i.test(prompt))return '9:16';
- if(/가로|와이드|배경|landscape|wide/i.test(prompt))return '16:9';
+ const explicit=[...prompt.matchAll(/(?<!\d)(16\s*:\s*9|9\s*:\s*16|4\s*:\s*3|3\s*:\s*4|1\s*:\s*1)(?!\d)/g)];
+ if(explicit.length)return explicit.at(-1)[1].replace(/\s/g,'');
+ if(/정사각형|\bsquare\b/i.test(prompt))return '1:1';
+ if(/세로로\s*(긴|길게)|세로\s*(비율|화면|이미지)|\bportrait\b|\bvertical\b/i.test(prompt))return '9:16';
+ if(/가로로\s*(긴|길게)|가로\s*(비율|화면|이미지)|와이드|\blandscape\b|\bwide\b/i.test(prompt))return '16:9';
  return '1:1';
 }
 const reply=(data,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
