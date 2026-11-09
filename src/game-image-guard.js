@@ -1,3 +1,11 @@
+// crypto.randomUUID is absent in iOS 14 and early iOS 15; keep image revisions usable.
+function lessonRandomUUID(){
+ if(typeof crypto.randomUUID==='function')return crypto.randomUUID();
+ const bytes=crypto.getRandomValues(new Uint8Array(16));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+ const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+ return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
+}
+
 // One runtime for generated previews, lesson players, downloads and the board.
 const GAME_SANDBOX='allow-scripts allow-pointer-lock';
 const GAME_ASSET_LABELS={background:'배경',sprite:'주인공',item:'아이템',obstacle:'장애물'};
@@ -156,7 +164,7 @@ function safeGameHTML(html,options={}){
 }
 function mountGameFrame(frame,html,onStatus=()=>{}){
  frame._gameCleanup?.();
- const assets=readGameAssets(html),required=Object.keys(assets),token=crypto.randomUUID();let disposed=false,received=false;
+ const assets=readGameAssets(html),required=Object.keys(assets),token=lessonRandomUUID();let disposed=false,received=false;
  function status(value){if(!disposed)onStatus({...value,required,valid:value.ready&&value.errors.length===0&&required.every(kind=>value.loaded.includes(kind)&&value.drawn.includes(kind))});}
  const listener=event=>{if(event.source!==frame.contentWindow||event.data?.channel!=='flappy-game-runtime'||event.data.token!==token)return;const value=event.data;if(!Array.isArray(value.errors)||!Array.isArray(value.loaded)||!Array.isArray(value.drawn))return;received=true;status(value);};
  window.addEventListener('message',listener);

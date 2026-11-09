@@ -1,6 +1,7 @@
 'use strict';
 const $=id=>document.getElementById(id),data=JSON.parse($('deck-data').textContent),STORE='flappy-image-course-20261025-v1'+(new URLSearchParams(location.search).get('room')?':room:'+new URLSearchParams(location.search).get('room'):'');
 const HOST='https://ai-lounge-flappy-lesson-20261025.yoon2566.workers.dev';
+/* IMAGE_ENCODING */
 /* GAME_IMAGE_GUARD */
 const DEMO={background:'background.webp',character:'bird-frame-1.webp',sprite:'bird-sprite.webp',item:'coin.webp'};
 const LABEL={background:'배경',character:'주인공',sprite:'주인공',item:'아이템',obstacle:'장애물'};
@@ -60,12 +61,17 @@ function promptDialog(title,text,run){
 function gameDialog(html,title,mode){
  const d=dialog(title),viewport=el('div','game-viewport'),frame=el('iframe'),sourceGame=html.includes('#gamecontainer{width:320px;height:525px;')||html.includes('data-flappy-source="owl-v2"');
  d.classList.add('game-dialog');frame.title=title;
+ // Size only the outer viewing frame; never rewrite a student's game document.
+ const canvases=new DOMParser().parseFromString(html,'text/html').querySelectorAll('canvas');
+ const canvas=canvases.length===1?canvases[0]:null;
+ const canvasWidth=Number(canvas?.getAttribute('width')),canvasHeight=Number(canvas?.getAttribute('height'));
+ const gameSize=sourceGame?[320,525]:canvasWidth>0&&canvasHeight>0&&Number.isFinite(canvasWidth)&&Number.isFinite(canvasHeight)?[canvasWidth,canvasHeight]:null;
  viewport.append(frame);const bar=el('div','actions game-toolbar');
  bar.append(action('닫기',()=>closeDialog(d)));
  bar.append(action('HTML 다운로드',()=>download('내가_만든_플래피게임.html',new Blob([safeGameHTML(html)],{type:'text/html;charset=utf-8'}))));
  const hint=el('p','game-status');hint.setAttribute('role','status');const reload=()=>mountGameFrame(frame,html,status=>{hint.textContent=gameStatusText(status);hint.classList.toggle('error',status.errors.length>0);});bar.append(action('다시 불러오기',reload));d.append(viewport,hint,bar);reload();d.addEventListener('close',()=>frame._gameCleanup?.(),{once:true});
  if(sourceGame&&html.includes('flappy-ranking'))registerRankFrame(frame);
- function fitGame(){if(!sourceGame)return;const w=viewport.clientWidth,h=viewport.clientHeight;if(!w||!h)return;const scale=Math.min(w/320,h/525);frame.classList.add('source-game-zoom');frame.style.transform='scale('+scale+')';frame.style.left=(w-320*scale)/2+'px';frame.style.top=(h-525*scale)/2+'px';}
+ function fitGame(){if(!gameSize)return;const {width:w,height:h}=viewport.getBoundingClientRect();if(!w||!h)return;const [gw,gh]=gameSize,scale=Math.min(w/gw,h/gh);frame.classList.add('source-game-zoom');frame.style.width=gw+'px';frame.style.height=gh+'px';frame.style.transform='translate(-50%,-50%) scale('+scale+')';}
  const observer=new ResizeObserver(fitGame);observer.observe(viewport);d.addEventListener('close',()=>observer.disconnect(),{once:true});
  frame.onload=()=>{fitGame();if(mode)frame.contentWindow.postMessage({channel:'flappy-lesson',command:'mode',mode},'*');if(document.querySelector('dialog[open]:last-of-type')===d)frame.focus();};
  requestAnimationFrame(fitGame);
@@ -120,7 +126,7 @@ async function verifyCleanAsset(src){const info=await transparencyInfo(src);if(i
 async function removeBackground(src,tolerance=78,kind='sprite'){
  const im=await loadImage(src),canvas=el('canvas');canvas.width=im.width;canvas.height=im.height;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,0,0);const raw=ctx.getImageData(0,0,im.width,im.height),px=raw.data,buckets=new Map();
  for(let y=0;y<im.height;y+=Math.max(1,Math.floor(im.height/100)))for(let x=0;x<im.width;x+=Math.max(1,Math.floor(im.width/100))){if(x>im.width*.03&&x<im.width*.97&&y>im.height*.03&&y<im.height*.97)continue;const i=(y*im.width+x)*4;if(px[i+3]<10)continue;const key=[px[i]>>4,px[i+1]>>4,px[i+2]>>4].join(',');const v=buckets.get(key)||{count:0,r:0,g:0,b:0};v.count++;v.r+=px[i];v.g+=px[i+1];v.b+=px[i+2];buckets.set(key,v);}
- const before=await transparencyInfo(src);if(before.transparentRatio>.02&&before.pinkRatio<.08){const normalized=normalizeTransparent(canvas,kind),clean=normalized.toDataURL('image/webp',1);return {clean,width:normalized.width,height:normalized.height,cleanVerified:true,acceptedUnverified:false,transparency:await verifyCleanAsset(clean)};}
+ const before=await transparencyInfo(src);if(before.transparentRatio>.02&&before.pinkRatio<.08){const normalized=normalizeTransparent(canvas,kind),clean=await canvasImageDataURL(normalized,1);return {clean,width:normalized.width,height:normalized.height,cleanVerified:true,acceptedUnverified:false,transparency:await verifyCleanAsset(clean)};}
  const dominant=[...buckets.values()].sort((a,b)=>b.count-a.count)[0],key=dominant?[dominant.r/dominant.count,dominant.g/dominant.count,dominant.b/dominant.count]:null;let removed=0;
  // Remove only the background connected to the canvas edge. Similar body colors
  // enclosed by an outline are retained rather than erased globally.
@@ -133,18 +139,18 @@ async function removeBackground(src,tolerance=78,kind='sprite'){
  // particles and all details inside the main object's bounds.
  const cells=kind==='sprite'?2:1,cellWidth=Math.floor(im.width/cells),visited=new Uint8Array(seen.length);
  for(let f=0;f<cells;f++){const components=[];for(let y=0;y<im.height;y++)for(let x=f*cellWidth;x<(f+1)*cellWidth;x++){const n=y*im.width+x;if(visited[n]||px[n*4+3]<128)continue;const c={pixels:[],x0:x,x1:x,y0:y,y1:y};let q=[n];visited[n]=1;for(let j=0;j<q.length;j++){const v=q[j],xx=v%im.width,yy=Math.floor(v/im.width);c.pixels.push(v);c.x0=Math.min(c.x0,xx);c.x1=Math.max(c.x1,xx);c.y0=Math.min(c.y0,yy);c.y1=Math.max(c.y1,yy);for(const z of [xx>f*cellWidth?v-1:-1,xx<(f+1)*cellWidth-1?v+1:-1,v-im.width,v+im.width])if(z>=0&&z<visited.length&&!visited[z]&&px[z*4+3]>=128){visited[z]=1;q.push(z);}}components.push(c);}components.sort((a,b)=>b.pixels.length-a.pixels.length);const main=components[0];if(!main)continue;const margin=Math.max(6,.06*Math.max(main.x1-main.x0,main.y1-main.y0));for(const c of components.slice(1)){const dx=Math.max(0,main.x0-c.x1,c.x0-main.x1),dy=Math.max(0,main.y0-c.y1,c.y0-main.y1);if(Math.hypot(dx,dy)>margin&&c.pixels.length<main.pixels.length*.15)for(const n of c.pixels)px[n*4+3]=0;}}
- ctx.putImageData(raw,0,0);const normalized=normalizeTransparent(canvas,kind),clean=normalized.toDataURL('image/webp',1);const info=await transparencyInfo(clean);const cleanVerified=removed>=im.width*im.height*.02&&info.transparentRatio>=.02&&info.pinkRatio<=.08;return{clean,width:normalized.width,height:normalized.height,removed,cleanVerified,acceptedUnverified:false,transparency:info};
+ ctx.putImageData(raw,0,0);const normalized=normalizeTransparent(canvas,kind),clean=await canvasImageDataURL(normalized,1);const info=await transparencyInfo(clean);const cleanVerified=removed>=im.width*im.height*.02&&info.transparentRatio>=.02&&info.pinkRatio<=.08;return{clean,width:normalized.width,height:normalized.height,removed,cleanVerified,acceptedUnverified:false,transparency:info};
 }
 function invalidateAssetURL(kind){state.hosted ||= {};state.hostedCache ||= {};const old=state.hosted[kind];if(old?.fingerprint)state.hostedCache[old.fingerprint]=old.url;delete state.hosted[kind];delete state.urls[kind];}
-async function webpFromSource(src){const im=await loadImage(src),c=el('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);const webp=c.toDataURL('image/webp',.95);if(!webp.startsWith('data:image/webp'))throw Error('WebP를 저장할 수 없는 브라우저입니다.');return webp;}
+async function webpFromSource(src){const im=await loadImage(src),c=el('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);return canvasImageDataURL(c,.95);}
 async function saveCharacterSheet(src){
  const im=await loadImage(src),half=Math.floor(im.width/2),c=el('canvas');c.width=half;c.height=im.height;c.getContext('2d').drawImage(im,0,0,half,im.height,0,0,half,im.height);
- const sheet=await webpFromSource(src),character=c.toDataURL('image/webp',.95),pairId=crypto.randomUUID();
+ const sheet=await webpFromSource(src),character=await canvasImageDataURL(c,.95),pairId=lessonRandomUUID();
  state.assets.character={raw:character,width:half,height:im.height,pairId,revision:pairId,subject:state.choices.character};
  state.assets.sprite={raw:sheet,width:im.width,height:im.height,pairId,revision:pairId,stale:false};invalidateAssetURL('sprite');save();
 }
 async function saveAsset(kind,src,clean=false){
- src=await webpFromSource(src);const im=await loadImage(src);state.assets[kind]={[clean?'clean':'raw']:src,width:im.width,height:im.height,revision:crypto.randomUUID(),stale:false};invalidateAssetURL(kind);
+ src=await webpFromSource(src);const im=await loadImage(src);state.assets[kind]={[clean?'clean':'raw']:src,width:im.width,height:im.height,revision:lessonRandomUUID(),stale:false};invalidateAssetURL(kind);
  if(kind==='character'&&state.assets.sprite){state.assets.sprite.stale=true;invalidateAssetURL('sprite');}
  save();
 }
@@ -158,7 +164,7 @@ async function ensureHosted(kind,src){
  if(state.hosted[kind]?.fingerprint===fingerprint){const cached=state.hosted[kind].url;let reachable=true;try{await verifyHostedImage(cached);}catch{reachable=false;}if(assetSrc(kind,kind!=='background')!==src)throw Error('이미지가 바뀌었습니다. 새 이미지로 다시 시도해 주세요.');if(reachable){state.urls[kind]=cached;syncImageURL(kind,cached);save();return cached;}delete state.hostedCache[fingerprint];delete state.hosted[kind];delete state.urls[kind];}
  const key=kind+':'+fingerprint;
  if(hostingJobs.has(key))return hostingJobs.get(key);
- const job=(async()=>{const webp=src.startsWith('data:image/webp')?src:await webpFromSource(src);const blob=await(await fetch(webp)).blob();if(blob.size>2*1024*1024)throw Error('그림이 너무 큽니다. 2MB 이하의 WebP로 준비해 주세요.');const uploadController=new AbortController(),timeout=setTimeout(()=>uploadController.abort(),25000);let out;try{const response=await fetch(classroomAPI('/api/assets'),{method:'POST',headers:{'Content-Type':'image/webp'},body:blob,signal:uploadController.signal});out=await response.json();if(!response.ok)throw Error(out.error||'이미지 주소를 만들지 못했습니다.');}catch(error){if(error.name==='AbortError')throw Error('그림 저장이 지연되고 있어요. 다시 시도해 주세요.');throw error;}finally{clearTimeout(timeout);}if(typeof out.url!=='string'||!/^https?:\/\//.test(out.url))throw Error('그림 주소를 받지 못했습니다. 다시 시도해 주세요.');await verifyHostedImage(out.url);
+ const job=(async()=>{const encoded=(src.startsWith('data:image/webp;base64,')||isSavedPNG8(src))?src:await webpFromSource(src);const blob=await(await fetch(encoded)).blob();if(blob.size>2*1024*1024)throw Error('그림을 저장하지 못했습니다. 다시 시도해 주세요.');const uploadController=new AbortController(),timeout=setTimeout(()=>uploadController.abort(),25000);let out;try{const response=await fetch(classroomAPI('/api/assets'),{method:'POST',headers:{'Content-Type':blob.type},body:blob,signal:uploadController.signal});out=await response.json();if(!response.ok)throw Error(out.error||'이미지 주소를 만들지 못했습니다.');}catch(error){if(error.name==='AbortError')throw Error('그림 저장이 지연되고 있어요. 다시 시도해 주세요.');throw error;}finally{clearTimeout(timeout);}if(typeof out.url!=='string'||!/^https?:\/\//.test(out.url))throw Error('그림 주소를 받지 못했습니다. 다시 시도해 주세요.');await verifyHostedImage(out.url);
  if(assetSrc(kind,kind!=='background')!==src)throw Error('이미지가 바뀌었습니다. 새 이미지로 다시 시도해 주세요.');
  state.hosted[kind]={fingerprint,url:out.url};state.hostedCache[fingerprint]=out.url;state.urls[kind]=out.url;syncImageURL(kind,out.url);save();return out.url;})();hostingJobs.set(key,job);try{return await job;}finally{hostingJobs.delete(key);}
 }

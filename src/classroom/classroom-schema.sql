@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS classrooms (
   name TEXT NOT NULL,
   created_at INTEGER NOT NULL,
   open_mask INTEGER NOT NULL DEFAULT 1,
+  screen_locked INTEGER NOT NULL DEFAULT 0,
   revision INTEGER NOT NULL DEFAULT 1,
   board_visibility TEXT NOT NULL DEFAULT 'public' CHECK (board_visibility IN ('class','public')),
   deleted_at INTEGER

@@ -4,6 +4,15 @@
 /output/
 # Existing nested upstream Git repository is preserved as an offline tar snapshot.
 /vendor/
+!/vendor/
+/vendor/*
+!/vendor/pako_deflate.min.js
+!/vendor/pako.LICENSE
+!/vendor/png8.js
+!/vendor/README.md
+!/vendor/qrcode-generator-2.0.4.js
+!/vendor/qrcode-generator.LICENSE
+!/vendor/qrcode-generator.README.md
 /evidence/*
 !/evidence/.gitkeep
 /.build/*

@@ -43,7 +43,7 @@ export async function handleBoard(request,env){
       const author=input.author.trim(),title=input.title.trim(),lesson='플래피 이미지 게임';
       const secret=owner(request);if(!secret)return json({error:'게시 정보를 확인하지 못했어요. 새로고침한 뒤 다시 게시해 주세요.'},409);
       const id=await ownerId(secret),existing=await env.ARTWORK_DB.prepare(`SELECT ${metadata} FROM works WHERE id=?1`).bind(id).first(),now=Date.now();
-      const result=await env.ARTWORK_DB.prepare('INSERT INTO works (id,author,title,lesson,html,bytes,created_at) SELECT ?1,?2,?3,?4,?5,?6,?7 WHERE EXISTS (SELECT 1 FROM works WHERE id=?1) OR (SELECT COUNT(*) FROM works WHERE created_at>?8)<1000 ON CONFLICT(id) DO UPDATE SET author=excluded.author,title=excluded.title,html=excluded.html,bytes=excluded.bytes').bind(id,author,title,lesson,input.html,size,now,now-60000).run();
+      const result=await env.ARTWORK_DB.prepare('INSERT INTO works (id,author,title,lesson,html,bytes,created_at) SELECT ?1,?2,?3,?4,?5,?6,?7 WHERE EXISTS (SELECT 1 FROM works WHERE id=?1) OR (SELECT COUNT(*) FROM works WHERE created_at>?8)<5000 ON CONFLICT(id) DO UPDATE SET author=excluded.author,title=excluded.title,html=excluded.html,bytes=excluded.bytes').bind(id,author,title,lesson,input.html,size,now,now-60000).run();
       if(!result.meta.changes)return json({error:'공유 요청이 많아요. 1분 뒤 다시 눌러 주세요.'},429,{'Retry-After':'60'});
       const item=await env.ARTWORK_DB.prepare(`SELECT ${metadata} FROM works WHERE id=?1`).bind(id).first();return json({item,updated:Boolean(existing)},existing?200:201);
     }

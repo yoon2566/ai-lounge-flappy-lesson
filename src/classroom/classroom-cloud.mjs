@@ -1,4 +1,4 @@
-const SESSION_MS=8*60*60*1000,LOGIN_WINDOW_MS=15*60*1000;
+const SESSION_MS=8*60*60*1000,LOGIN_WINDOW_MS=60*1000;
 const encoder=new TextEncoder();
 const json=(value,status=200,headers={})=>Response.json(value,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...headers}});
 const hex=bytes=>Array.from(new Uint8Array(bytes),byte=>byte.toString(16).padStart(2,'0')).join('');
@@ -37,7 +37,7 @@ async function body(request){
 }
 export function roomState(room,slides,canManage){
   const openPages=slides.flatMap((_,index)=>(room.open_mask&(1<<index))?[index+1]:[]);
-  return {code:room.code,name:room.name,boardVisibility:room.board_visibility==='class'?'class':'public',createdAt:room.created_at,openPages,maxPage:Math.max(0,...openPages),totalPages:slides.length,revision:room.revision,expiresAt:null,canManage,events:true};
+  return {code:room.code,name:room.name,boardVisibility:room.board_visibility==='class'?'class':'public',createdAt:room.created_at,openPages,screenLocked:room.screen_locked===1,maxPage:Math.max(0,...openPages),totalPages:slides.length,revision:room.revision,expiresAt:null,canManage,events:true};
 }
 export async function teacherSessionExpiry(request,db,now){
   const cookie=(request.headers.get('Cookie')||'').split(';').map(part=>part.trim()).find(part=>part.startsWith('lounge_teacher='))?.slice('lounge_teacher='.length);
@@ -53,7 +53,7 @@ async function login(request,env,password,now){
   if(!env.TEACHER_PASSWORD_HASH)return json({error:'강사 비밀번호 설정을 확인해 주세요.'},503);
   const db=env.CLASSROOM_DB,address=await digest(env.TEACHER_PASSWORD_HASH+'|'+(request.headers.get('CF-Connecting-IP')||'local'));
   const attempt=await db.prepare('INSERT INTO classroom_login_attempts (address,attempts,expires_at) VALUES (?1,1,?2) ON CONFLICT(address) DO UPDATE SET attempts=CASE WHEN expires_at<=?3 THEN 1 ELSE attempts+1 END,expires_at=CASE WHEN expires_at<=?3 THEN ?2 ELSE expires_at END RETURNING attempts').bind(address,now+LOGIN_WINDOW_MS,now).first();
-  if(attempt.attempts>10)return json({error:'비밀번호 입력을 여러 번 시도했어요. 15분 뒤 다시 시도해 주세요.'},429,{'Retry-After':'900'});
+  if(attempt.attempts>30)return json({error:'비밀번호 입력을 여러 번 시도했어요. 1분 뒤 다시 시도해 주세요.'},429,{'Retry-After':'60'});
   if(!await validPassword(password,env.TEACHER_PASSWORD_HASH))return json({error:'강사 비밀번호가 맞지 않아요.'},401);
   const token=randomHex(32),secure=new URL(request.url).protocol==='https:'?'; Secure':'';
   await db.batch([
@@ -113,7 +113,13 @@ export async function handleClassroom(request,env,slides,now=Date.now()){
       return json({deleted:true,code});
     }
     const input=await body(request);let expression,value;
-    if(Object.hasOwn(input,'lockAll')){
+    if(Object.hasOwn(input,'screenLock')){
+      if(typeof input.screenLock!=='boolean')return json({error:'화면 잠금 요청을 확인해 주세요.'},400);
+      // A rolling deployment may briefly reach an unmigrated database. Keep the
+      // existing classroom APIs usable; never pretend a screen lock was stored.
+      if(!Object.hasOwn(room,'screen_locked'))return json({error:'화면 잠금 준비가 완료되지 않았어요. 관리자에게 문의해 주세요.'},503);
+      await db.prepare('UPDATE classrooms SET screen_locked=?1,revision=revision+1 WHERE code=?2 AND deleted_at IS NULL').bind(input.screenLock?1:0,code).run();
+    }else if(Object.hasOwn(input,'lockAll')){
       if(input.lockAll!==true)return json({error:'전체 잠금 요청을 확인해 주세요.'},400);expression='?1';value=0;
     }else if(Object.hasOwn(input,'page')){
       if(!Number.isInteger(input.page)||input.page<1||input.page>slides.length||typeof input.open!=='boolean')return json({error:'올바른 페이지와 열림 상태를 골라 주세요.'},400);
@@ -121,7 +127,7 @@ export async function handleClassroom(request,env,slides,now=Date.now()){
     }else{
       if(!Number.isInteger(input.maxPage)||input.maxPage<1||input.maxPage>slides.length)return json({error:'올바른 페이지를 골라 주세요.'},400);expression='?1';value=(1<<input.maxPage)-1;
     }
-    await db.prepare('UPDATE classrooms SET open_mask='+expression+',revision=revision+1 WHERE code=?2 AND deleted_at IS NULL').bind(value,code).run();
+    if(!Object.hasOwn(input,'screenLock'))await db.prepare('UPDATE classrooms SET open_mask='+expression+',revision=revision+1 WHERE code=?2 AND deleted_at IS NULL').bind(value,code).run();
     const updated=await db.prepare('SELECT * FROM classrooms WHERE code=?1 AND deleted_at IS NULL').bind(code).first();
     if(!updated)return json({error:'수업을 찾지 못했어요.'},404);
     const snapshot=roomState(updated,slides,true);await notifyClassroom(env,snapshot);return json(snapshot);

@@ -1,5 +1,11 @@
-const imageHeaders = () => new Headers({
-  'Content-Type': 'image/webp',
+export function imageType(bytes) {
+  if (bytes.length >= 24 && bytes[0]===82 && bytes[1]===73 && bytes[2]===70 && bytes[3]===70 && bytes[8]===87 && bytes[9]===69 && bytes[10]===66 && bytes[11]===80) return 'image/webp';
+  if (bytes.length >= 33 && [137,80,78,71,13,10,26,10].every((n,i)=>bytes[i]===n) && bytes[8]===0 && bytes[9]===0 && bytes[10]===0 && bytes[11]===13 && bytes[12]===73 && bytes[13]===72 && bytes[14]===68 && bytes[15]===82) return 'image/png';
+  return null;
+}
+
+const imageHeaders = key => new Headers({
+  'Content-Type': key.endsWith('.png') ? 'image/png' : 'image/webp',
   'Cache-Control': 'public, max-age=31536000, immutable',
   'Access-Control-Allow-Origin': '*',
   'X-Content-Type-Options': 'nosniff',
@@ -11,10 +17,12 @@ export function imageStorageMode(env) {
 }
 
 export async function storeImage(env, key, bytes) {
+  const type = imageType(bytes);
+  if (!type || !key.endsWith(type === 'image/png' ? '.png' : '.webp')) throw new Error('그림을 저장하지 못했습니다. 다시 시도해 주세요.');
   if (env.LESSON_IMAGE_BUCKET) {
     const object = await env.LESSON_IMAGE_BUCKET.put(key, bytes, {
       httpMetadata: {
-        contentType: 'image/webp',
+        contentType: type,
         cacheControl: 'public, max-age=31536000, immutable'
       }
     });
@@ -27,7 +35,7 @@ export async function storeImage(env, key, bytes) {
 }
 
 export async function readImage(env, key, method = 'GET') {
-  const headers = imageHeaders();
+  const headers = imageHeaders(key);
   let r2Error;
   if (env.LESSON_IMAGE_BUCKET) {
     try {
